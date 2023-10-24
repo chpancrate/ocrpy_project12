@@ -1,0 +1,40 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import os
+from dotenv import load_dotenv
+
+from models.models import User
+
+load_dotenv()
+
+db_user = os.getenv("DB_USER")
+db_pass = os.getenv("DB_PASS")
+db_host = os.getenv("DB_HOST")
+db_name = os.getenv("DB_NAME")
+db_engine = os.getenv("DB_ENGINE")
+
+if db_engine == "mysql":
+    db_url = f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/{db_name}"
+elif db_engine == "sqlite":
+    db_url = f"sqlite:///{db_name}"
+elif db_engine == "postgresql":
+    db_url = f"postgresql://{db_user}:{db_pass}@{db_host}/{db_name}"
+
+engine = create_engine(db_url)
+
+Session = sessionmaker(bind=engine)
+"""
+session = Session()
+user = User(employee_number="003",
+            first_name="John3",
+            last_name="Olliver",
+            email="John.olli@hbo3.com",
+            password="password")
+session.add(user)
+session.commit()
+
+print("user_id:", user.id)
+print("user_is_authenticated:", user.is_authenticated)
+print(user.is_password_correct("password"))
+print("user_is_authenticated:", user.is_authenticated)
+"""
