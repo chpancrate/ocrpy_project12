@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
 from argon2 import PasswordHasher
+from db import Base
 
-Base = declarative_base()
+# Base = declarative_base()
 
 
 class User(Base):
@@ -53,7 +53,7 @@ class User(Base):
     def deactivate(self):
         self.active = False
 
-    def reactivate(self):
+    def activate(self):
         self.active = True
 
 
@@ -66,6 +66,12 @@ class Team(Base):
     role_id = Column(Integer, ForeignKey('roles.id'), nullable=False)
     users = relationship("User", backref="users")
 
+    def deactivate(self):
+        self.active = False
+
+    def activate(self):
+        self.active = True
+
 
 class Role(Base):
     __tablename__ = 'roles'
@@ -74,3 +80,9 @@ class Role(Base):
     name = Column(String(50), nullable=False)
     active = Column(Boolean, default=True, nullable=False)
     teams = relationship("Team", backref="teams")
+
+    def deactivate(self):
+        self.active = False
+
+    def activate(self):
+        self.active = True

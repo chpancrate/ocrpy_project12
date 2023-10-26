@@ -1,10 +1,12 @@
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base
 import os
-from dotenv import load_dotenv
 
-# from models.models import User
-"""
+
+Base = declarative_base()
+
 load_dotenv()
 
 db_user = os.getenv("DB_USER")
@@ -24,21 +26,4 @@ elif db_engine == "test":
 
 engine = create_engine(db_url)
 
-Session = sessionmaker(bind=engine)
-"""
-
-"""
-session = Session()
-user = User(employee_number="003",
-            first_name="John3",
-            last_name="Olliver",
-            email="John.olli@hbo3.com",
-            password="password")
-session.add(user)
-session.commit()
-
-print("user_id:", user.id)
-print("user_is_authenticated:", user.is_authenticated)
-print(user.is_password_correct("password"))
-print("user_is_authenticated:", user.is_authenticated)
-"""
+session_maker = sessionmaker(bind=engine)
