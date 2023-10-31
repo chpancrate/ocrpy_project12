@@ -3,10 +3,12 @@ import pytest
 
 class ValueStorage():
     user_id = None
+    team_id = None
+    role_id = None
 
 
 @pytest.fixture
-def user1_fix():
+def user_fix():
     return {'employee_number': 1,
             'first_name': "firstname 1",
             'last_name': "lastname 1",
@@ -17,6 +19,22 @@ def user1_fix():
             }
 
 
+@pytest.fixture
+def team_fix():
+    return {'name': "team name",
+            'active': True,
+            'role_id': None
+            }
+
+
+@pytest.fixture
+def role_fix():
+    return {'name': "role name",
+            'active': True,
+            }
+
+
+"""
 @pytest.fixture
 def user2_fix():
     return {'employee_number': 2,
@@ -51,3 +69,4 @@ def user4_fix():
             'active': True,
             'team_id': None
             }
+"""

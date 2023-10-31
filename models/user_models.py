@@ -1,9 +1,8 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from db import Base
-
-# Base = declarative_base()
 
 
 class User(Base):
@@ -42,13 +41,21 @@ class User(Base):
     def is_password_correct(self, input_password):
 
         ph = PasswordHasher()
+        result = False
 
-        if ph.verify(self.password, input_password):
-            self.is_authenticated = True
-            return True
-        else:
+        try:
+            result_verify = ph.verify(self.password, input_password) 
+            if result_verify:
+                self.is_authenticated = True
+                result = True
+            else:
+                self.is_authenticated = False
+                result = False
+        except VerifyMismatchError:
             self.is_authenticated = False
-            return False
+            result = False
+
+        return result
 
     def deactivate(self):
         self.active = False
@@ -61,7 +68,7 @@ class Team(Base):
     __tablename__ = 'teams'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(50), nullable=False)
+    name = Column(String(50), nullable=False, unique=True)
     active = Column(Boolean, default=True, nullable=False)
     role_id = Column(Integer, ForeignKey('roles.id'), nullable=False)
     users = relationship("User", backref="users")
@@ -77,7 +84,7 @@ class Role(Base):
     __tablename__ = 'roles'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(50), nullable=False)
+    name = Column(String(50), nullable=False, unique=True)
     active = Column(Boolean, default=True, nullable=False)
     teams = relationship("Team", backref="teams")
 

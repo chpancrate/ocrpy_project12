@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 import jwt
 import os
 
-from models.user_dal_functions import get_user_by_email, MSG_RECORD_NOT_FOUND
+from models.user_dal_functions import get_user_by_email
+from db import DB_RECORD_NOT_FOUND
 
 load_dotenv()
 
@@ -12,6 +13,7 @@ ACCESS_TOKEN_DELAY = int(os.getenv("ACCESS_TOKEN_DELAY"))
 REFRESH_TOKEN_DELAY = int(os.getenv("REFRESH_TOKEN_DELAY"))
 
 INVALID_TOKEN = "Invalid token"
+INVALID_PASSWORD = "Invalid password"
 
 
 def create_tokens(user_id):
@@ -50,7 +52,7 @@ def create_tokens(user_id):
     return result
 
 
-def password_authentification(email, password):
+def password_authentication(email, password):
     """ check if password and email match
     create access token and refresh token for the user
     param :
@@ -65,14 +67,19 @@ def password_authentification(email, password):
     get_user_result = get_user_by_email(email)
 
     if get_user_result['status'] == 'ok':
-        user_id = get_user_result['user'].id
-        tokens = create_tokens(user_id)
-        result = tokens
-        result['status'] = "ok"
+        user = get_user_result['user']
+        if user.is_password_correct(password):
+            tokens = create_tokens(user.id)
+            result = tokens
+            result['status'] = "ok"
+        else:
+            result = {}
+            result['status'] = 'ko'
+            result['error'] = INVALID_PASSWORD
     else:
         result = {}
         result['status'] = 'ko'
-        result['error'] = MSG_RECORD_NOT_FOUND
+        result['error'] = DB_RECORD_NOT_FOUND
 
     return result
 
@@ -107,19 +114,19 @@ def request_token_with_refresh(refresh_token):
                                       key=SECRET_KEY,
                                       algorithm="HS256")
 
-            result = {'access': access_token}
+            result['access'] = access_token
         else:
             # if not a refresh token raise error
             result['status'] = 'ko'
             result['error'] = INVALID_TOKEN
-    except jwt.exceptions.JWTError:
+    except jwt.ExpiredSignatureError:
         result['status'] = 'ko'
         result['error'] = INVALID_TOKEN
 
     return result
 
 
-def check_token(access_token):
+def check_access_token(access_token):
     """ check token and extract data from payload
     param :
     access_token : access token
@@ -142,7 +149,7 @@ def check_token(access_token):
             # if not a refresh token raise error
             result['status'] = 'ko'
             result['error'] = INVALID_TOKEN
-    except jwt.exceptions.JWTError:
+    except jwt.ExpiredSignatureError:
         result['status'] = 'ko'
         result['error'] = INVALID_TOKEN
 

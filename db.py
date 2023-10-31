@@ -27,3 +27,6 @@ elif db_engine == "test":
 engine = create_engine(db_url)
 
 session_maker = sessionmaker(bind=engine)
+
+DB_RECORD_NOT_FOUND = "Record not Found"
+DB_TEAM_NOT_EMPTY = "The team is not empty"
