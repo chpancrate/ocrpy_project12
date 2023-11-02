@@ -19,8 +19,8 @@ class TestDalUser():
         cls.session = Session()
 
     def teardown_class(self):
-        Base.metadata.drop_all(engine)
         self.session.close()
+        Base.metadata.drop_all(engine)
 
     def test_create_user(self, user_fix):
         """
@@ -33,6 +33,7 @@ class TestDalUser():
 
         assert result['status'] == "ok"
 
+        self.session.commit()
         ValueStorage.user_id = result['user_id']
         user = (self.session.query(User)
                     .filter(User.id == ValueStorage.user_id)
@@ -58,7 +59,7 @@ class TestDalUser():
         """
         GIVEN a user and a dictionnary of data
         WHEN you call dal.upadate_user using the dictionnary
-        THEN the user is updatede in the database
+        THEN the user is updated in the database
              and the status and user.id are returned
         """
         user_fix['id'] = ValueStorage.user_id
@@ -70,6 +71,7 @@ class TestDalUser():
         assert result['status'] == "ok"
         assert result['user_id'] == ValueStorage.user_id
 
+        self.session.commit()
         user = (self.session.query(User)
                 .filter(User.id == ValueStorage.user_id)
                 .first())
@@ -110,6 +112,7 @@ class TestDalUser():
         assert result['status'] == "ok"
         assert result['user_id'] == user.id
 
+        self.session.commit()
         self.session.refresh(user)
 
         assert user.active is False
@@ -148,6 +151,7 @@ class TestDalUser():
         assert result['status'] == "ok"
         assert result['user_id'] == user.id
 
+        self.session.commit()
         self.session.refresh(user)
 
         assert user.active is True
@@ -188,6 +192,7 @@ class TestDalUser():
         assert result['status'] == "ok"
         assert result['user_id'] == user.id
 
+        self.session.commit()
         self.session.refresh(user)
 
         ph = PasswordHasher()
@@ -292,7 +297,7 @@ class TestDalUser():
         assert result['status'] == "ok"
         assert result['user_id'] == ValueStorage.user_id
 
-        self.session.expire_all()
+        self.session.commit()
 
         # check user deleted
         user = (self.session.query(User)
@@ -324,8 +329,8 @@ class TestDalTeam():
         cls.session = Session()
 
     def teardown_class(self):
-        Base.metadata.drop_all(engine)
         self.session.close()
+        Base.metadata.drop_all(engine)
 
     def test_create_team(self, team_fix, role_fix):
         """
@@ -334,6 +339,7 @@ class TestDalTeam():
         THEN the team is created in the database
              and the status and team.id are returned
         """
+
         role = Role(name=role_fix['name'],
                     active=role_fix['active']
                     )
@@ -347,6 +353,7 @@ class TestDalTeam():
 
         assert result['status'] == "ok"
 
+        self.session.commit()
         ValueStorage.team_id = result['team_id']
         team = (self.session.query(Team)
                 .filter(Team.id == ValueStorage.team_id)
@@ -385,6 +392,7 @@ class TestDalTeam():
         assert result['status'] == "ok"
         assert result['team_id'] == ValueStorage.team_id
 
+        self.session.commit()
         team = (self.session.query(Team)
                 .filter(Team.id == ValueStorage.team_id)
                 .first())
@@ -425,6 +433,7 @@ class TestDalTeam():
         assert result['status'] == "ok"
         assert result['team_id'] == team.id
 
+        self.session.commit()
         self.session.refresh(team)
 
         assert team.active is False
@@ -460,6 +469,7 @@ class TestDalTeam():
         assert result['status'] == "ok"
         assert result['team_id'] == team.id
 
+        self.session.commit()
         self.session.refresh(team)
 
         assert team.active is True
@@ -529,6 +539,7 @@ class TestDalTeam():
         assert team
 
         # add user to team
+        self.session.commit()
         user = (self.session.query(User)
                     .filter(User.id == ValueStorage.user_id)
                     .first())
@@ -568,7 +579,7 @@ class TestDalTeam():
         assert result['status'] == "ok"
         assert result['team_id'] == ValueStorage.team_id
 
-        self.session.expire_all()
+        self.session.commit()
 
         # check team deleted
         team = (self.session.query(Team)
@@ -586,8 +597,8 @@ class TestDalRole():
         cls.session = Session()
 
     def teardown_class(self):
-        Base.metadata.drop_all(engine)
         self.session.close()
+        Base.metadata.drop_all(engine)
 
     def test_create_role(self, role_fix):
         """
@@ -635,6 +646,7 @@ class TestDalRole():
         assert result['status'] == "ok"
         assert result['role_id'] == ValueStorage.role_id
 
+        self.session.commit()
         ValueStorage.role_id = result['role_id']
         role = (self.session.query(Role)
                 .filter(Role.id == ValueStorage.role_id)
@@ -676,6 +688,7 @@ class TestDalRole():
         assert result['status'] == "ok"
         assert result['role_id'] == role.id
 
+        self.session.commit()
         self.session.refresh(role)
 
         assert role.active is False
@@ -712,6 +725,7 @@ class TestDalRole():
         assert result['status'] == "ok"
         assert result['role_id'] == role.id
 
+        self.session.commit()
         self.session.refresh(role)
 
         assert role.active is True
@@ -779,7 +793,7 @@ class TestDalRole():
         assert result['status'] == "ok"
         assert result['role_id'] == ValueStorage.role_id
 
-        self.session.expire_all()
+        self.session.commit()
 
         # check role deleted
         role = (self.session.query(Role)
@@ -788,7 +802,7 @@ class TestDalRole():
 
         assert role is None
 
-    def test_delete_role_with_error(self, team_fix):
+    def test_delete_role_with_error(self):
         """
         GIVEN a role id
         WHEN you call dal.delete_role using the id

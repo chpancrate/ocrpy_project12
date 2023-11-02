@@ -1,3 +1,6 @@
+# define Data Layer Access functions for the User, Team and Role classes
+# created in the user_models package
+
 from argon2 import PasswordHasher
 from sqlalchemy import exc
 
@@ -11,7 +14,7 @@ from models.user_models import User, Team, Role
 def create_user(user_dict):
     """ create user in database
     parameters :
-    user_dict : dictionnary with data fot user to be created,
+    user_dict : dictionnary with data for user to be created,
                 one key for each column in base, id excepted
     returns result dictionnary with keys :
     'status': ok or ko

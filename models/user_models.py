@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from db import Base
+from .client_models import Client
 
 
 class User(Base):
@@ -16,6 +17,8 @@ class User(Base):
     password = Column(String(150), nullable=False)
     active = Column(Boolean, default=True, nullable=False)
     team_id = Column(Integer, ForeignKey('teams.id'), default=None)
+    clients = relationship('Client', backref='followed_clients')
+    events = relationship('Event', backref='supported_events')
 
     def __init__(self,
                  employee_number,
@@ -44,7 +47,7 @@ class User(Base):
         result = False
 
         try:
-            result_verify = ph.verify(self.password, input_password) 
+            result_verify = ph.verify(self.password, input_password)
             if result_verify:
                 self.is_authenticated = True
                 result = True
@@ -71,7 +74,7 @@ class Team(Base):
     name = Column(String(50), nullable=False, unique=True)
     active = Column(Boolean, default=True, nullable=False)
     role_id = Column(Integer, ForeignKey('roles.id'), nullable=False)
-    users = relationship("User", backref="users")
+    users = relationship('User', backref='users')
 
     def deactivate(self):
         self.active = False
@@ -86,7 +89,7 @@ class Role(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False, unique=True)
     active = Column(Boolean, default=True, nullable=False)
-    teams = relationship("Team", backref="teams")
+    teams = relationship('Team', backref='teams')
 
     def deactivate(self):
         self.active = False
