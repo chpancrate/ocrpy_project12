@@ -24,6 +24,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+from models.user_models import User, Team, Role
+from models.client_models import Client, Event, Contract
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

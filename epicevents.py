@@ -1,44 +1,16 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import os
-from dotenv import load_dotenv
+# Epic events CRM launching script
+from controllers.general_cont import MainController
+from views.general_view import Screen
+from authentication.auth_models import AuthenticationManager
 
-# from models.models import User
-"""
-load_dotenv()
 
-db_user = os.getenv("DB_USER")
-db_pass = os.getenv("DB_PASS")
-db_host = os.getenv("DB_HOST")
-db_name = os.getenv("DB_NAME")
-db_engine = os.getenv("DB_ENGINE")
+def main():
+    screen = Screen()
+    authentication = AuthenticationManager()
 
-if db_engine == "mysql":
-    db_url = f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/{db_name}"
-elif db_engine == "sqlite":
-    db_url = f"sqlite:///{db_name}"
-elif db_engine == "postgresql":
-    db_url = f"postgresql://{db_user}:{db_pass}@{db_host}/{db_name}"
-elif db_engine == "test":
-    db_url = "sqlite:///test.db"
+    epic_events_crm = MainController(screen, authentication)
+    epic_events_crm.run()
 
-engine = create_engine(db_url)
 
-Session = sessionmaker(bind=engine)
-"""
-
-"""
-session = Session()
-user = User(employee_number="003",
-            first_name="John3",
-            last_name="Olliver",
-            email="John.olli@hbo3.com",
-            password="password")
-session.add(user)
-session.commit()
-
-print("user_id:", user.id)
-print("user_is_authenticated:", user.is_authenticated)
-print(user.is_password_correct("password"))
-print("user_is_authenticated:", user.is_authenticated)
-"""
+if __name__ == "__main__":
+    main()

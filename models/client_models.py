@@ -13,6 +13,8 @@ from datetime import datetime
 
 from db import Base
 
+CONTRACT_STATUS = ['signé', 'non signé']
+
 
 class Client(Base):
     __tablename__ = 'clients'
@@ -39,6 +41,10 @@ class Client(Base):
 
     def activate(self):
         self.active = True
+
+    def full_name(self):
+        full_name = self.first_name + ' ' + self.last_name
+        return full_name
 
 
 class Contract(Base):

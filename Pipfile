@@ -11,6 +11,7 @@ pymysql = "*"
 argon2-cffi = "*"
 pytest = "*"
 pyjwt = "*"
+rich = "*"
 
 [dev-packages]
 
