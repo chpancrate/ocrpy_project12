@@ -74,6 +74,7 @@ class User(Base):
         full_name = self.first_name + ' ' + self.last_name
         return full_name
 
+
 class Team(Base):
     __tablename__ = 'teams'
 

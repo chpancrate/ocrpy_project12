@@ -7,7 +7,7 @@ from sqlalchemy.orm import subqueryload
 from db import (session_maker,
                 DB_RECORD_NOT_FOUND,
                 )
-from models.client_models import Contract
+from models.client_models import Contract, CONTRACT_STATUS
 from models.event_dal_functions import delete_event
 
 
@@ -192,7 +192,64 @@ def get_all_contracts():
     result['status'] = "ok"
     try:
         with session_maker() as session:
-            contracts = (session.query(Contract).all())
+            contracts = (session.query(Contract)
+                         .all())
+            if contracts is not None:
+                result['contracts'] = contracts
+            else:
+                result['status'] = "ko"
+                result['error'] = DB_RECORD_NOT_FOUND
+    except exc.SQLAlchemyError as e:
+        result['status'] = "ko"
+        result['error'] = e
+
+    return result
+
+
+def get_unsigned_contracts():
+    """ retrieve all contracts in database wtih status unsigned
+    parameters :
+
+    returns result dictionnary with keys :
+    'status': ok or ko
+    'contracts': contracts objects (if status == ok)
+    'error': error details (if status == ko)
+    """
+    result = {}
+    result['status'] = "ok"
+    try:
+        with session_maker() as session:
+            contracts = (session.query(Contract)
+                         .filter(Contract.status == CONTRACT_STATUS[1])
+                         .all())
+            if contracts is not None:
+                result['contracts'] = contracts
+            else:
+                result['status'] = "ko"
+                result['error'] = DB_RECORD_NOT_FOUND
+    except exc.SQLAlchemyError as e:
+        result['status'] = "ko"
+        result['error'] = e
+
+    return result
+
+
+def get_unpaid_contracts():
+    """ retrieve all contracts in database with unpaid_amound != 0
+    parameters :
+
+    returns result dictionnary with keys :
+    'status': ok or ko
+    'contracts': contracts objects (if status == ok)
+    'error': error details (if status == ko)
+    """
+    result = {}
+    result['status'] = "ok"
+    try:
+        with session_maker() as session:
+            contracts = (session.query(Contract)
+                         .filter(Contract.amount_unpaid != 0)
+                         .all())
             if contracts is not None:
                 result['contracts'] = contracts
             else:

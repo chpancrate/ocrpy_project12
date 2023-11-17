@@ -2,7 +2,7 @@ import os
 
 from rich.align import Align
 from rich.columns import Columns
-from rich.console import Console, Group
+from rich.console import Group
 from rich.layout import Layout
 from rich.padding import Padding
 from rich.panel import Panel
@@ -11,21 +11,34 @@ from rich.table import Table
 from rich.text import Text
 
 from .view_functions import (
-    main_menu_display_create,
+    console,
+    header_display_create,
+    login_header_display_create,
     sub_menu_display_create,
     prompt_display_create,
     prompt_choice_decode,
-    console,
     screen_layout,
     administration_screen_layout,
-    client_creation_prompt_display,
-    contract_creation_prompt_display,
-    event_creation_prompt_display,
-    user_creation_prompt_display,
     clear_screen,
-    display_date
+    display_date,
+    display_prompt,
+    CLIENT_COLOR,
+    CONTRACT_COLOR,
+    EVENT_COLOR,
+    USER_COLOR
 )
 
+from controllers.controllers_functions import (MC_CLIENT_CREATE,
+                                               MC_CLIENT_DETAILS,
+                                               MC_CLIENT_UPDATE,
+                                               MC_CONTRACT_CREATE,
+                                               MC_CONTRACT_DETAILS,
+                                               MC_CONTRACT_UPDATE,
+                                               MC_EVENT_CREATE,
+                                               MC_EVENT_DETAILS,
+                                               MC_EVENT_UPDATE,
+                                               MC_USER_UPDATE,
+                                               MC_USER_DETAILS)
 # reduce console size to allow prompt
 OFFSET_HEIGHT = 2
 CONSOLE_SIZE = console.height - OFFSET_HEIGHT
@@ -33,6 +46,57 @@ console.height = CONSOLE_SIZE
 
 
 class Screen:
+    def __init__(self, authentication):
+        self.auth = authentication
+
+    def token_process(func):
+        """ decorator
+        processes token before calling the function
+        if token received from controller (when login) store them
+        else
+        retrieve stored access token
+        if access token valid send it with the result of the functions
+        if not, refresh it and send the new token with the fucntion result
+        if refresh impossible send the old token
+        (will force a login from the controller)
+        """
+
+        def wrapper(self, *args, **kwargs):
+
+            tokens = args[1]
+            if tokens['access'] is not None:
+                self.auth.save_tokens_to_file(tokens)
+
+            result = func(self, args[0])
+
+            stored_tokens = self.auth.get_tokens_from_file()
+
+            check_access = self.auth.check_token(stored_tokens['access'])
+            if check_access['status'] == 'ok':
+                print('XXX-TokP: check_access ok')
+                token = stored_tokens['access']
+            else:
+                print('XXX-TokP: check_access ko')
+                check_refresh = self.auth.check_token(stored_tokens['refresh'])
+                if check_refresh['status'] == 'ok':
+                    print('XXX-TokP: check_refresh ok')
+                    get_refresh = self.auth.request_token_with_refresh(
+                        stored_tokens['refresh'])
+                    if get_refresh['status'] == 'ok':
+                        print('XXX-TokP: get_refresh_ok')
+                        token = get_refresh['access']
+                    else:
+                        print('XXX-TokP: get_refresh_ko')
+                        token = stored_tokens['access']
+                else:
+                    print('XXX-TokP: check_refresh ko')
+                    token = stored_tokens['access']
+
+            return result, token
+
+        return wrapper
+
+    @token_process
     def general(self, view_setup):
         """display the start screen"""
 
@@ -41,7 +105,14 @@ class Screen:
         layout = screen_layout()
 
         # header
-        disp_layout = main_menu_display_create(layout)
+        user_first_name = view_setup['header']['user_first_name']
+        user_last_name = view_setup['header']['user_last_name']
+        user_role = view_setup['header']['user_role']
+
+        disp_layout = header_display_create(layout,
+                                            user_first_name,
+                                            user_last_name,
+                                            user_role)
 
         # body
         # clients list
@@ -77,7 +148,7 @@ class Screen:
             centered_table = Align.center(table)
             list_disp = Panel(
                 centered_table,
-                style="blue",
+                style=CLIENT_COLOR,
                 title=view_setup["body"]["data"]["clients_title"],
             )
             disp_layout["clients"].update(list_disp)
@@ -121,7 +192,7 @@ class Screen:
             centered_table = Align.center(table)
             list_disp = Panel(
                 centered_table,
-                style="blue",
+                style=CONTRACT_COLOR,
                 title=view_setup["body"]["data"]["contracts_title"],
             )
             disp_layout["contracts"].update(list_disp)
@@ -163,7 +234,7 @@ class Screen:
             centered_table = Align.center(table)
             list_disp = Panel(
                 centered_table,
-                style="blue",
+                style=EVENT_COLOR,
                 title=view_setup["body"]["data"]["events_title"],
             )
 
@@ -180,10 +251,11 @@ class Screen:
         console.print(disp_layout)
 
         # prompt
-        choice = prompt_display_create(view_setup)
+        choice = display_prompt(view_setup['prompt'])
 
         return prompt_choice_decode(choice)
 
+    @token_process
     def details(self, view_setup):
         """display the details screen"""
 
@@ -192,20 +264,29 @@ class Screen:
         layout = screen_layout()
 
         # header
-        disp_layout = main_menu_display_create(layout)
+        user_first_name = view_setup['header']['user_first_name']
+        user_last_name = view_setup['header']['user_last_name']
+        user_role = view_setup['header']['user_role']
+
+        disp_layout = header_display_create(layout,
+                                            user_first_name,
+                                            user_last_name,
+                                            user_role)
 
         # body
         # client display
         if "client" in view_setup["body"]["data"]:
             client = view_setup["body"]["data"]["client"]
+            commercial_contact = (view_setup["body"]
+                                  ["data"]['client_commercial_contact'])
 
             # client details
             table_client = Table(box=None, show_header=False, title="Client")
 
             table_client.add_column(
-                "Item", justify="left", no_wrap=True, style="bright_blue")
+                "Item", justify="left", no_wrap=True, style=CLIENT_COLOR)
             table_client.add_column(
-                "Separator", justify="left", no_wrap=True, style="bright_blue")
+                "Separator", justify="left", no_wrap=True, style=CLIENT_COLOR)
             table_client.add_column(
                 "Value", justify="left", no_wrap=True, style="white")
 
@@ -215,8 +296,10 @@ class Screen:
             table_client.add_row("(3) Email", ":", client.email)
             table_client.add_row("(4) Telephone", ":", client.telephone)
             table_client.add_row("(5) Entreprise", ":", client.enterprise)
-            table_client.add_row("(6) Contact", ":",
+            table_client.add_row("(6) Id Contact", ":",
                                  str(client.commercial_contact_id))
+            table_client.add_row("    Nom Contact", ":",
+                                 commercial_contact.full_name())
             table_client.add_row("    Date de Création",
                                  ":",
                                  display_date(client.creation_date))
@@ -267,7 +350,7 @@ class Screen:
                 centered_table_client, " ", " ", centered_table_contracts
             )
             client_disp = Panel(table_group,
-                                style="blue",
+                                style=CLIENT_COLOR,
                                 title=(view_setup['body']
                                        ['data']['client_title'])
                                 )
@@ -292,12 +375,18 @@ class Screen:
                                    show_header=False,
                                    title="Contrat")
 
-            table_contract.add_column(
-                "Item", justify="left", no_wrap=True, style="bright_blue")
-            table_contract.add_column(
-                "Separator", justify="left", no_wrap=True, style="bright_blue")
-            table_contract.add_column(
-                "Value", justify="left", no_wrap=True, style="white")
+            table_contract.add_column("Item",
+                                      justify="left",
+                                      no_wrap=True,
+                                      style=CONTRACT_COLOR)
+            table_contract.add_column("Separator",
+                                      justify="left",
+                                      no_wrap=True,
+                                      style=CONTRACT_COLOR)
+            table_contract.add_column("Value",
+                                      justify="left",
+                                      no_wrap=True,
+                                      style="white")
 
             table_contract.add_row(
                 "    No", ":", str(contract.id))
@@ -326,15 +415,22 @@ class Screen:
 
             centered_table_contract = Align.center(table_contract)
 
-            # event details
+            # contract event details
             table_event = Table(box=None, show_header=False, title="Evènement")
 
-            table_event.add_column(
-                "Item", justify="left", no_wrap=True, style="bright_blue")
-            table_event.add_column(
-                "Separator", justify="left", no_wrap=True, style="bright_blue")
-            table_event.add_column(
-                "Value", justify="left", no_wrap=True, style="white")
+            table_event.add_column("Item",
+                                   justify="left",
+                                   no_wrap=True,
+                                   style=CONTRACT_COLOR)
+            table_event.add_column("Separator",
+                                   justify="left",
+                                   no_wrap=True,
+                                   style=CONTRACT_COLOR)
+            table_event.add_column("Value",
+                                   justify="left",
+                                   no_wrap=True,
+                                   style="white")
+            
             if "contract_event" in view_setup["body"]["data"]:
                 table_event.add_row(
                     "Titre", ":", event.title)
@@ -354,7 +450,7 @@ class Screen:
                 # Event Support contact
                 support_contact_disp = Text()
                 support_contact_disp.append('Contact support: ')
-                if event_support:
+                if 'contract_event_support' in view_setup["body"]["data"]:
                     support_contact_disp.append(event_support.full_name(),
                                                 style='white')
 
@@ -394,7 +490,7 @@ class Screen:
                 centered_support_contact_disp
             )
             contract_disp = Panel(table_group,
-                                  style="blue",
+                                  style=CONTRACT_COLOR,
                                   title=(view_setup['body']
                                          ['data']['contract_title'])
                                   )
@@ -405,20 +501,29 @@ class Screen:
         # event display
         if "event" in view_setup["body"]["data"]:
             event = view_setup["body"]["data"]['event']
+            event_client = view_setup["body"]["data"]['event_client']
 
             table_event = Table(box=None, show_header=False, title="Evènement")
 
             table_event.add_column(
-                "Item", justify="left", no_wrap=True, style="bright_blue")
+                "Item", justify="left", no_wrap=True, style=EVENT_COLOR)
             table_event.add_column(
-                "Separator", justify="left", no_wrap=True, style="bright_blue")
+                "Separator", justify="left", no_wrap=True, style=EVENT_COLOR)
             table_event.add_column(
                 "Value", justify="left", no_wrap=True, style="white")
 
             table_event.add_row(
                 "(1) Titre", ":", event.title)
             table_event.add_row(
+                "    Id", ":", str(event.id))
+            table_event.add_row(
                 "(2) No Contrat", ":", str(event.contract_id))
+            table_event.add_row(
+                "    Client", ":", event_client.full_name())
+            table_event.add_row(
+                "    Telephone", ":", event_client.telephone)
+            table_event.add_row(
+                "    Email", ":", event_client.email)
             table_event.add_row(
                 "(3) Débute le", ":", display_date(event.start_date))
             table_event.add_row(
@@ -439,11 +544,21 @@ class Screen:
                     "    Nom Contact Support",
                     ":",
                     event_support.full_name())
+            else:
+                table_event.add_row(
+                    "(8) No Contact Support",
+                    ":",
+                    " ")
+                table_event.add_row(
+                    "    Nom Contact Support",
+                    ":",
+                    " ")
+
             centered_table_event = Align.center(table_event)
 
             # screen display
             event_disp = Panel(centered_table_event,
-                               style="blue",
+                               style=EVENT_COLOR,
                                title=(view_setup['body']
                                       ['data']['event_title'])
                                )
@@ -461,23 +576,249 @@ class Screen:
         console.print(disp_layout)
 
         # prompt
-        choice = prompt_display_create(view_setup)
+        if view_setup['type'] in [MC_CLIENT_DETAILS,
+                                  MC_CONTRACT_DETAILS,
+                                  MC_EVENT_DETAILS]:
+            choice = display_prompt(view_setup['prompt'])
+            return prompt_choice_decode(choice)
+        elif view_setup['type'] == [MC_CLIENT_UPDATE,
+                                    MC_CONTRACT_UPDATE,
+                                    MC_EVENT_UPDATE]:
+            input_data = display_prompt(view_setup['prompt'])
+            return input_data
 
-        return prompt_choice_decode(choice)
-
+    @token_process
     def creation(self, view_setup):
         """display the creation screen"""
 
         clear_screen()
 
-        console.height = 6
+        console.height = 20
         layout = screen_layout()
 
         # header
-        disp_layout = main_menu_display_create(layout)
+        user_first_name = view_setup['header']['user_first_name']
+        user_last_name = view_setup['header']['user_last_name']
+        user_role = view_setup['header']['user_role']
+
+        disp_layout = header_display_create(layout,
+                                            user_first_name,
+                                            user_last_name,
+                                            user_role)
 
         # body
-        disp_layout["body"].visible = False
+        body_data = view_setup['body']['data']
+
+        if view_setup['type'] == MC_CLIENT_CREATE:
+            table_client = Table(box=None,
+                                 show_header=False,
+                                 )
+
+            table_client.add_column("Item",
+                                    justify="left",
+                                    no_wrap=True,
+                                    style=CLIENT_COLOR)
+            table_client.add_column("Separator",
+                                    justify="left",
+                                    no_wrap=True,
+                                    style=CLIENT_COLOR)
+            table_client.add_column("Value",
+                                    justify="left",
+                                    no_wrap=True,
+                                    style="white")
+
+            if 'first_name' in body_data:
+                first_name = body_data['first_name']
+            else:
+                first_name = ' '
+            table_client.add_row("Prénom",
+                                 ":",
+                                 first_name)
+
+            if 'last_name' in body_data:
+                last_name = body_data['last_name']
+            else:
+                last_name = ' '
+            table_client.add_row("Nom",
+                                 ":",
+                                 last_name)
+
+            if 'email' in body_data:
+                email = body_data['email']
+            else:
+                email = ' '
+            table_client.add_row("Email",
+                                 ":",
+                                 email)
+
+            if 'telephone' in body_data:
+                telephone = body_data['telephone']
+            else:
+                telephone = ' '
+            table_client.add_row("Telephone",
+                                 ":",
+                                 telephone)
+
+            if 'entreprise' in body_data:
+                entreprise = body_data['entreprise']
+            else:
+                entreprise = ' '
+            table_client.add_row("Entreprise",
+                                 ":",
+                                 entreprise)
+
+            centered_table_client = Align.center(table_client)
+            client_disp = Panel(centered_table_client,
+                                style=CLIENT_COLOR,
+                                title=view_setup['body']['title']
+                                )
+            disp_layout["clients"].update(client_disp)
+        else:
+            disp_layout['clients'].visible = False
+
+        if view_setup['type'] == MC_CONTRACT_CREATE:
+            table_contract = Table(box=None,
+                                   show_header=False,
+                                   )
+
+            table_contract.add_column("Item",
+                                      justify="left",
+                                      no_wrap=True,
+                                      style=CONTRACT_COLOR)
+            table_contract.add_column("Separator",
+                                      justify="left",
+                                      no_wrap=True,
+                                      style=CONTRACT_COLOR)
+            table_contract.add_column("Value",
+                                      justify="left",
+                                      no_wrap=True,
+                                      style="white")
+
+            if 'client_id' in body_data:
+                client_id = body_data['client_id']
+            else:
+                client_id = ' '
+            table_contract.add_row("Id Client",
+                                   ":",
+                                   client_id)
+
+            if 'total_amount' in body_data:
+                total_amount = body_data['total_amount']
+            else:
+                total_amount = ' '
+            table_contract.add_row("Montant total",
+                                   ":",
+                                   total_amount)
+
+            if 'amount_unpaid' in body_data:
+                amount_unpaid = body_data['amount_unpaid']
+            else:
+                amount_unpaid = ' '
+            table_contract.add_row("Reste à payer",
+                                   ":",
+                                   amount_unpaid)
+
+            if 'status' in body_data:
+                status = body_data['status']
+            else:
+                status = ' '
+            table_contract.add_row("Status",
+                                   ":",
+                                   status)
+
+            centered_table_contract = Align.center(table_contract)
+            contract_disp = Panel(centered_table_contract,
+                                  style=CONTRACT_COLOR,
+                                  title=view_setup['body']['title']
+                                  )
+            disp_layout["contracts"].update(contract_disp)
+
+        else:
+            disp_layout["contracts"].visible = False
+
+        if view_setup['type'] == MC_EVENT_CREATE:
+            table_event = Table(box=None,
+                                show_header=False,
+                                )
+
+            table_event.add_column("Item",
+                                   justify="left",
+                                   no_wrap=True,
+                                   style=EVENT_COLOR)
+            table_event.add_column("Separator",
+                                   justify="left",
+                                   no_wrap=True,
+                                   style=EVENT_COLOR)
+            table_event.add_column("Value",
+                                   justify="left",
+                                   no_wrap=True,
+                                   style="white")
+
+            if 'title' in body_data:
+                title = body_data['title']
+            else:
+                title = ' '
+            table_event.add_row("Titre",
+                                ":",
+                                title)
+
+            if 'contract_id' in body_data:
+                contract_id = body_data['contract_id']
+            else:
+                contract_id = ' '
+            table_event.add_row("No de Contrat",
+                                ":",
+                                contract_id)
+
+            if 'start_date' in body_data:
+                start_date = body_data['start_date']
+            else:
+                start_date = ' '
+            table_event.add_row("date de début",
+                                ":",
+                                start_date)
+
+            if 'end_date' in body_data:
+                end_date = body_data['end_date']
+            else:
+                end_date = ' '
+            table_event.add_row("Date de fin",
+                                ":",
+                                end_date)
+
+            if 'location' in body_data:
+                location = body_data['location']
+            else:
+                location = ' '
+            table_event.add_row("Lieu",
+                                ":",
+                                location)
+
+            if 'attendees' in body_data:
+                attendees = body_data['attendees']
+            else:
+                attendees = ' '
+            table_event.add_row("Nombre de personnes",
+                                ":",
+                                attendees)
+
+            if 'notes' in body_data:
+                notes = body_data['notes']
+            else:
+                notes = ' '
+            table_event.add_row("Notes",
+                                ":",
+                                notes)
+
+            centered_table_event = Align.center(table_event)
+            event_disp = Panel(centered_table_event,
+                               style=EVENT_COLOR,
+                               title=view_setup['body']['title']
+                               )
+            disp_layout["events"].update(event_disp)
+
+        else:
+            disp_layout["events"].visible = False
 
         # footer
         disp_layout["footer"].visible = False
@@ -485,16 +826,12 @@ class Screen:
         console.print(disp_layout)
 
         # prompt
-        if view_setup['type'] == 'client_creation':
-            client_dict = client_creation_prompt_display()
-        elif view_setup['type'] == 'contract_creation':
-            client_dict = contract_creation_prompt_display()
-        elif view_setup['type'] == 'event_creation':
-            client_dict = event_creation_prompt_display()
+        input_data = display_prompt(view_setup['prompt'])
 
         console.height = None
-        return client_dict
+        return input_data
 
+    @token_process
     def user_administration(self, view_setup):
         """display the user administration home page """
 
@@ -503,7 +840,14 @@ class Screen:
         layout = administration_screen_layout()
 
         # header
-        disp_layout = main_menu_display_create(layout)
+        user_first_name = view_setup['header']['user_first_name']
+        user_last_name = view_setup['header']['user_last_name']
+        user_role = view_setup['header']['user_role']
+
+        disp_layout = header_display_create(layout,
+                                            user_first_name,
+                                            user_last_name,
+                                            user_role)
 
         # body
         # users list
@@ -550,8 +894,8 @@ class Screen:
         centered_table = Align.center(table)
         list_disp = Panel(
             centered_table,
-            style="blue",
-            title=view_setup["body"]["data"]["users_title"],
+            style=USER_COLOR,
+            title=view_setup['body']['title'],
         )
         disp_layout['body'].update(list_disp)
 
@@ -564,10 +908,11 @@ class Screen:
         console.print(disp_layout)
 
         # prompt
-        choice = prompt_display_create(view_setup)
+        choice = display_prompt(view_setup['prompt'])
 
         return prompt_choice_decode(choice)
 
+    @token_process
     def user_details(self, view_setup):
         """display the user details page """
 
@@ -576,18 +921,25 @@ class Screen:
         layout = administration_screen_layout()
 
         # header
-        disp_layout = main_menu_display_create(layout)
+        user_first_name = view_setup['header']['user_first_name']
+        user_last_name = view_setup['header']['user_last_name']
+        user_role = view_setup['header']['user_role']
+
+        disp_layout = header_display_create(layout,
+                                            user_first_name,
+                                            user_last_name,
+                                            user_role)
 
         # body
         user = view_setup["body"]["data"]['user']
         user_team = view_setup["body"]["data"]['user_team']
 
-        table = Table(box=None, show_header=False, title="Evènement")
+        table = Table(box=None, show_header=False)
 
         table.add_column(
-            "Item", justify="left", no_wrap=True, style="bright_blue")
+            "Item", justify="left", no_wrap=True, style=USER_COLOR)
         table.add_column(
-            "Separator", justify="left", no_wrap=True, style="bright_blue")
+            "Separator", justify="left", no_wrap=True, style=USER_COLOR)
         table.add_column(
             "Value", justify="left", no_wrap=True, style="white")
 
@@ -609,8 +961,8 @@ class Screen:
         centered_table = Align.center(table)
         list_disp = Panel(
             centered_table,
-            style="blue",
-            title=view_setup["body"]["data"]["user_title"],
+            style=USER_COLOR,
+            title=view_setup['body']['title'],
         )
         disp_layout['body'].update(list_disp)
 
@@ -623,23 +975,98 @@ class Screen:
         console.print(disp_layout)
 
         # prompt
-        choice = prompt_display_create(view_setup)
+        if view_setup['type'] == MC_USER_DETAILS:
+            choice = display_prompt(view_setup['prompt'])
+            return prompt_choice_decode(choice)
+        elif view_setup['type'] == MC_USER_UPDATE:
+            input_data = display_prompt(view_setup['prompt'])
+            return input_data
 
-        return prompt_choice_decode(choice)
-
+    @token_process
     def user_creation(self, view_setup):
         """display the creation screen"""
 
         clear_screen()
 
-        console.height = 6
+        console.height = 15
         layout = administration_screen_layout()
 
         # header
-        disp_layout = main_menu_display_create(layout)
+        user_first_name = view_setup['header']['user_first_name']
+        user_last_name = view_setup['header']['user_last_name']
+        user_role = view_setup['header']['user_role']
+
+        disp_layout = header_display_create(layout,
+                                            user_first_name,
+                                            user_last_name,
+                                            user_role)
 
         # body
-        disp_layout["body"].visible = False
+        body_data = view_setup['body']['data']
+
+        table_user = Table(box=None,
+                           show_header=False,
+                           )
+
+        table_user.add_column("Item",
+                              justify="left",
+                              no_wrap=True,
+                              style=USER_COLOR)
+        table_user.add_column("Separator",
+                              justify="left",
+                              no_wrap=True,
+                              style=USER_COLOR)
+        table_user.add_column("Value",
+                              justify="left",
+                              no_wrap=True,
+                              style="white")
+
+        if 'employee_number' in body_data:
+            employee_number = body_data['employee_number']
+        else:
+            employee_number = ' '
+        table_user.add_row("Matricule",
+                           ":",
+                           employee_number)
+
+        if 'first_name' in body_data:
+            first_name = body_data['first_name']
+        else:
+            first_name = ' '
+        table_user.add_row("Prénom",
+                           ":",
+                           first_name)
+
+        if 'last_name' in body_data:
+            last_name = body_data['last_name']
+        else:
+            last_name = ' '
+        table_user.add_row("Nom",
+                           ":",
+                           last_name)
+
+        if 'email' in body_data:
+            email = body_data['email']
+        else:
+            email = ' '
+        table_user.add_row("Email",
+                           ":",
+                           email)
+
+        if 'team_id' in body_data:
+            team_id = body_data['team_id']
+        else:
+            team_id = ' '
+        table_user.add_row("No d'équipe",
+                           ":",
+                           team_id)
+
+        centered_table_user = Align.center(table_user)
+        user_disp = Panel(centered_table_user,
+                          style=USER_COLOR,
+                          title=view_setup['body']['title']
+                          )
+        disp_layout['body'].update(user_disp)
 
         # footer
         disp_layout["footer"].visible = False
@@ -647,10 +1074,10 @@ class Screen:
         console.print(disp_layout)
 
         # prompt
-        user_dict = user_creation_prompt_display()
+        input_data = display_prompt(view_setup['prompt'])
 
         console.height = None
-        return user_dict
+        return input_data
 
     def login(self, view_setup):
 
@@ -660,7 +1087,7 @@ class Screen:
         layout = administration_screen_layout()
 
         # header
-        disp_layout = main_menu_display_create(layout)
+        disp_layout = login_header_display_create(layout)
 
         # body
         disp_layout["body"].visible = False
@@ -675,8 +1102,11 @@ class Screen:
         email = Prompt.ask("Entrer votre email")
         login_dict['email'] = email
 
-        password = Prompt.ask("Entrer votre mot de passe")
+        password = Prompt.ask("Entrer votre mot de passe", password=True)
         login_dict['password'] = password
 
         console.height = None
         return login_dict
+
+    def exit(self):
+        console.print("Au revoir")

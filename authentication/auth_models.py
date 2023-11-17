@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import json
 import jwt
 import os
 
@@ -14,6 +15,9 @@ REFRESH_TOKEN_DELAY = int(os.getenv("REFRESH_TOKEN_DELAY"))
 
 INVALID_TOKEN = "Invalid token"
 INVALID_PASSWORD = "Invalid password"
+
+JSON_TOKEN_DIRNAME = "tokens/"
+JSON_TOKEN_FILENAME = JSON_TOKEN_DIRNAME + 'tokens.json'
 
 
 class AuthenticationManager():
@@ -86,71 +90,84 @@ class AuthenticationManager():
         return result
 
     def request_token_with_refresh(self, refresh_token):
-        """ verify refresh token and create access token for the user in token
+        """ check refresh token and create access and refresh token
+         for the user
+        in token
         param :
         refresh_token
         return: dictionnary with keys
         'status': ok or ko
         'access': token with short lifetime for ressource access (if status ok)
+        'refresh': token with longer lifetime to get new acces token
+                  (if status ok)
         'error': error (if status ko)
         """
-        result = {}
-        result['status'] = 'ok'
+
         try:
             decoded_token = jwt.decode(jwt=refresh_token,
                                        key=SECRET_KEY,
                                        algorithms=["HS256"])
 
             if decoded_token['type'] == 'refresh':
-                # if the token is a valid refresh token create an access token
+                # if the token is a valid refresh token
+                # create an access and refresh tokens
                 user_id = decoded_token['user_id']
-
-                access_payload = {
-                    'user_id': user_id,
-                    'exp': datetime.utcnow()
-                    + timedelta(minutes=ACCESS_TOKEN_DELAY)
-                    }
-
-                access_token = jwt.encode(payload=access_payload,
-                                          key=SECRET_KEY,
-                                          algorithm="HS256")
-
-                result['access'] = access_token
+                tokens = self.create_tokens(user_id)
+                result = tokens
+                result['status'] = 'ok'
             else:
                 # if not a refresh token raise error
+                result = {}
                 result['status'] = 'ko'
                 result['error'] = INVALID_TOKEN
         except jwt.ExpiredSignatureError:
+            result = {}
             result['status'] = 'ko'
             result['error'] = INVALID_TOKEN
 
         return result
 
-    def check_access_token(self, access_token):
+    def check_token(self, token):
         """ check token and extract data from payload
         param :
-        access_token : access token
+        token : an access or refresh token
         return: dictionnary with keys
         'status': ok or ko
-        'user_id': user id stored in token
+        'user_id': user id stored in token (if status ok)
         'error': error (if status ko)
         """
         result = {}
         result['status'] = 'ok'
         try:
-            decoded_token = jwt.decode(jwt=access_token,
+            decoded_token = jwt.decode(jwt=token,
                                        key=SECRET_KEY,
                                        algorithms=["HS256"])
 
-            if decoded_token['type'] == 'access':
-                # if the token is a valid access token retrieve data in payload
+            if decoded_token['type'] in ['access', 'refresh']:
+                # if the token is valid access token retrieve data in payload
                 result['user_id'] = decoded_token['user_id']
             else:
-                # if not a refresh token raise error
+                # if not return error
                 result['status'] = 'ko'
                 result['error'] = INVALID_TOKEN
         except jwt.ExpiredSignatureError:
+            # if token expired return error
             result['status'] = 'ko'
             result['error'] = INVALID_TOKEN
 
         return result
+
+    def save_tokens_to_file(self, tokens):
+        """ save the token passed to a tokens.json file"""
+        if not os.path.exists(JSON_TOKEN_DIRNAME):
+            os.makedirs(JSON_TOKEN_DIRNAME)
+
+        with open(JSON_TOKEN_FILENAME, "w") as file_json:
+            json.dump(tokens, file_json)
+
+    def get_tokens_from_file(self):
+        """ get the tokens from the tokens.json file"""
+        with open(JSON_TOKEN_FILENAME, "r") as file_json:
+            tokens = json.load(file_json)
+
+        return tokens

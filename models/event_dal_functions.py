@@ -214,6 +214,63 @@ def get_all_events():
     return result
 
 
+def get_supported_event(user_id):
+    """ retrieve events in database where
+    the user is the support contact
+    parameters :
+    user_id
+    returns result dictionnary with keys :
+    'status': ok or ko
+    'event': event object (if status == ok)
+    'error': error details (if status == ko)
+    """
+    result = {}
+    result['status'] = "ok"
+    try:
+        with session_maker() as session:
+            event = (session.query(Event)
+                     .filter(Event.support_contact_id == user_id)
+                     .all())
+            if event is not None:
+                result['events'] = event
+            else:
+                result['status'] = "ko"
+                result['error'] = DB_RECORD_NOT_FOUND
+    except exc.SQLAlchemyError as e:
+        result['status'] = "ko"
+        result['error'] = e
+
+    return result
+
+
+def get_event_unassigned():
+    """ retrieve events in database bwith no support user
+    parameters :
+
+    returns result dictionnary with keys :
+    'status': ok or ko
+    'event': event object (if status == ok)
+    'error': error details (if status == ko)
+    """
+    result = {}
+    result['status'] = "ok"
+    try:
+        with session_maker() as session:
+            event = (session.query(Event)
+                     .filter(Event.support_contact_id is None)
+                     .all())
+            if event is not None:
+                result['events'] = event
+            else:
+                result['status'] = "ko"
+                result['error'] = DB_RECORD_NOT_FOUND
+    except exc.SQLAlchemyError as e:
+        result['status'] = "ko"
+        result['error'] = e
+
+    return result
+
+
 def delete_event(event_id):
     """ delete event in database
     parameters :

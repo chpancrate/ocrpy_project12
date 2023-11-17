@@ -3,6 +3,7 @@
 
 from argon2 import PasswordHasher
 from sqlalchemy import exc
+from sqlalchemy.orm import subqueryload
 
 from db import (session_maker,
                 DB_RECORD_NOT_FOUND
@@ -205,7 +206,9 @@ def get_user_by_email(email):
     result['status'] = "ok"
     try:
         with session_maker() as session:
-            user = session.query(User).filter(User.email == email).first()
+            user = (session.query(User)
+                    .filter(User.email == email)
+                    .first())
             if user is not None:
                 result['user'] = user
             else:
@@ -231,7 +234,9 @@ def get_user_by_id(user_id):
     result['status'] = "ok"
     try:
         with session_maker() as session:
-            user = session.query(User).filter(User.id == user_id).first()
+            user = (session.query(User)
+                    .filter(User.id == user_id)
+                    .first())
             if user is not None:
                 result['user'] = user
             else:

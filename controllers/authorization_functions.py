@@ -1,4 +1,4 @@
-from models.user_dal_functions import get_user_by_id
+from models.client_dal_functions import get_client_by_id
 from models.contract_dal_functions import get_contract_by_id
 from models.event_dal_functions import get_event_by_id
 
@@ -8,39 +8,43 @@ SUPPORT_ROLE = 'support'
 
 
 def owns_client(user_id, client_id):
-    result = get_user_by_id(user_id)
+    """ check that a user is the commercial of a client
+    """
+    result = get_client_by_id(client_id)
     if result['status'] == 'ok':
-        user = result['user']
-        client_found = False
-        for client in user.clients:
-            if client_id == client.id:
-                client_found = True
-                break
+        client = result['client']
+    else:
+        return False
 
-        if client_found:
-            return True
-        else:
-            return False
+    if client.commercial_contact_id == user_id:
+        return True
     else:
         return False
 
 
 def owns_event(user_id, event_id):
-    result = get_user_by_id(user_id)
+    """ check that a user is the support of an event
+        or the commercial of the client of the event
+    """
+    result = get_event_by_id(event_id)
     if result['status'] == 'ok':
-        user = result['user']
-        event_found = False
-        for event in user.events:
-            if event_id == event.id:
-                event_found = True
-                break
+        event = result['event']
+    else:
+        return False
 
-        if event_found:
+    if event.support_contact_id == user_id:
+        return True
+    else:
+        result = get_contract_by_id(event.contract_id)
+        if result['status'] == 'ok':
+            contract = result['contract']
+        else:
+            return False
+
+        if owns_client(user_id, contract.client_id):
             return True
         else:
             return False
-    else:
-        return False
 
 
 def is_client_create_authorized(user_id, user_role):
@@ -109,7 +113,7 @@ def is_event_create_authorized(user_id, user_role):
         return False
 
 
-def is_event_upd_authorized(user_id, user_role, event_id):
+def is_event_update_authorized(user_id, user_role, event_id):
     # Rules :
     # user in management team
     # OR

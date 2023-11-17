@@ -12,6 +12,7 @@ argon2-cffi = "*"
 pytest = "*"
 pyjwt = "*"
 rich = "*"
+sentry-sdk = "*"
 
 [dev-packages]
 
