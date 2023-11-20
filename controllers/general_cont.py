@@ -12,6 +12,7 @@ from controllers.constants import (MSG_ERROR,
                                    MSG_WRONG_NUMBER_FORMAT,
                                    MSG_WRONG_STATUS,
                                    MSG_CONTRACT_NOT_FOUND,
+                                   MSG_EVENT_NOT_FOUND,
                                    MSG_WRONG_DATE_FORMAT,
                                    MSG_WRONG_COMMERCIAL_USER,
                                    MSG_WRONG_SUPPORT_USER,
@@ -399,6 +400,8 @@ class MainController:
         elif (result['status'] == 'ko'
               and result['error'] == DB_RECORD_NOT_FOUND):
             console.print(MSG_CLIENT_NOT_FOUND)
+            time.sleep(2)
+            self.control_client_list(connected_user, connected_user_role)
         else:
             capture_exception(result['error'])
             console.print(MSG_ERROR)
@@ -482,40 +485,37 @@ class MainController:
                                        prompt
                                        )
 
+        body_data['client_title'] = TITLE_CLIENT_DETAILS
+
+        # actions menu creation, taking role into account
+        actions.append((MENU_CLIENTS_LIST_KEYS,
+                        MENU_CLIENTS_LIST_LABEL))
+        actions.append((MENU_CONTRACTS_LIST_KEYS,
+                        MENU_CONTRACTS_LIST_LABEL))
+        actions.append((MENU_EVENTS_LIST_KEYS, MENU_EVENTS_LIST_LABEL))
+        if is_user_read_authorized(connected_user.id,
+                                   connected_user_role):
+            actions.append((MENU_ADMINISTRATION_KEYS,
+                            MENU_ADMINISTRATION_LABEL))
+        actions.append((MENU_CLIENTS_DETAILS_KEYS,
+                        MENU_CLIENTS_DETAILS_LABEL))
+        if is_client_update_authorized(connected_user.id,
+                                       connected_user_role,
+                                       client_id):
+            actions.append((MENU_CLIENT_UPDATE_KEYS,
+                            MENU_CLIENT_UPDATE_LABEL))
+        actions.append((MENU_RETURN_KEYS, MENU_RETURN_LABEL))
+        actions.append((MENU_EXIT_KEYS, MENU_EXIT_LABEL))
+
         result = get_client_by_id(client_id)
 
-        process_ok = False
+        if (result['status'] == 'ko'
+           and result['error'] == DB_RECORD_NOT_FOUND):
+            capture_exception(result['error'])
+            console.print(MSG_ERROR)
+        elif result['status'] == 'ok':
 
-        if result['status'] == 'ok':
             body_data['client'] = result['client']
-            process_ok = True
-        elif (result['status'] == 'ko'
-              and result['error'] == DB_RECORD_NOT_FOUND):
-            console.print(MSG_CLIENT_NOT_FOUND)
-            return
-
-        if process_ok:
-            body_data['client_title'] = TITLE_CLIENT_DETAILS
-
-            # actions menu creation, taking role into account
-            actions.append((MENU_CLIENTS_LIST_KEYS,
-                            MENU_CLIENTS_LIST_LABEL))
-            actions.append((MENU_CONTRACTS_LIST_KEYS,
-                            MENU_CONTRACTS_LIST_LABEL))
-            actions.append((MENU_EVENTS_LIST_KEYS, MENU_EVENTS_LIST_LABEL))
-            if is_user_read_authorized(connected_user.id,
-                                       connected_user_role):
-                actions.append((MENU_ADMINISTRATION_KEYS,
-                                MENU_ADMINISTRATION_LABEL))
-            actions.append((MENU_CLIENTS_DETAILS_KEYS,
-                            MENU_CLIENTS_DETAILS_LABEL))
-            if is_client_update_authorized(connected_user.id,
-                                           connected_user_role,
-                                           client_id):
-                actions.append((MENU_CLIENT_UPDATE_KEYS,
-                                MENU_CLIENT_UPDATE_LABEL))
-            actions.append((MENU_RETURN_KEYS, MENU_RETURN_LABEL))
-            actions.append((MENU_EXIT_KEYS, MENU_EXIT_LABEL))
 
             if data_id == '1':
                 client_dict = {}
@@ -655,6 +655,9 @@ class MainController:
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
+        else:
+            capture_exception(result['error'])
+            console.print(MSG_ERROR)
 
     def control_client_create(self,
                               connected_user,
@@ -748,7 +751,7 @@ class MainController:
     def control_contract_list(self,
                               connected_user,
                               connected_user_role,
-                              type):
+                              list_type):
         """ contract list control"""
 
         set_user({"email": connected_user.email})
@@ -767,11 +770,11 @@ class MainController:
                                        actions,
                                        prompt
                                        )
-        if type == MC_CONTRACT_LIST:
+        if list_type == MC_CONTRACT_LIST:
             result = get_all_contracts()
-        elif type == MC_CONTRACT_UNPAID_FILTER:
+        elif list_type == MC_CONTRACT_UNPAID_FILTER:
             result = get_unpaid_contracts()
-        elif type == MC_CONTRACT_UNSIGNED_FILTER:
+        elif list_type == MC_CONTRACT_UNSIGNED_FILTER:
             result = get_unsigned_contracts()
 
         process_ok = False
@@ -825,7 +828,8 @@ class MainController:
                                    choice,
                                    connected_user,
                                    connected_user_role,
-                                   token)
+                                   token,
+                                   list_type)
         else:
             capture_exception(result['error'])
             console.print(MSG_ERROR)
@@ -833,7 +837,8 @@ class MainController:
     def control_contract_details(self,
                                  contract_id,
                                  connected_user,
-                                 connected_user_role):
+                                 connected_user_role,
+                                 list_type):
         """ client detail control"""
 
         set_user({"email": connected_user.email})
@@ -933,6 +938,17 @@ class MainController:
                                    connected_user,
                                    connected_user_role,
                                    token)
+        elif (result['status'] == 'ko'
+              and result['error'] == DB_RECORD_NOT_FOUND):
+            console.print(MSG_CONTRACT_NOT_FOUND)
+            time.sleep(2)
+            if list_type is None:
+                self.control_start(connected_user,
+                                   connected_user_role)
+            else:
+                self.control_contract_list(connected_user,
+                                           connected_user_role,
+                                           list_type)
         else:
             capture_exception(result['error'])
             console.print(MSG_ERROR)
@@ -1235,7 +1251,7 @@ class MainController:
     def control_event_list(self,
                            connected_user,
                            connected_user_role,
-                           type):
+                           list_type):
         """ event list control"""
 
         set_user({"email": connected_user.email})
@@ -1254,11 +1270,11 @@ class MainController:
                                        actions,
                                        prompt
                                        )
-        if type == MC_EVENT_LIST:
+        if list_type == MC_EVENT_LIST:
             result = get_all_events()
-        elif type == MC_EVENT_OWNED_FILTER:
+        elif list_type == MC_EVENT_OWNED_FILTER:
             result = get_supported_event(connected_user.id)
-        elif type == MC_EVENT_UNASSIGNED_FILTER:
+        elif list_type == MC_EVENT_UNASSIGNED_FILTER:
             result = get_event_unassigned()
         process_ok = False
 
@@ -1315,7 +1331,8 @@ class MainController:
                                    choice,
                                    connected_user,
                                    connected_user_role,
-                                   token)
+                                   token,
+                                   list_type)
         else:
             capture_exception(result['error'])
             console.print(MSG_ERROR)
@@ -1323,7 +1340,8 @@ class MainController:
     def control_event_details(self,
                               event_id,
                               connected_user,
-                              connected_user_role):
+                              connected_user_role,
+                              list_type):
         """ control event details screen """
 
         set_user({"email": connected_user.email})
@@ -1402,6 +1420,17 @@ class MainController:
                                    connected_user,
                                    connected_user_role,
                                    token)
+        elif (result['status'] == 'ko'
+              and result['error'] == DB_RECORD_NOT_FOUND):
+            console.print(MSG_EVENT_NOT_FOUND)
+            time.sleep(2)
+            if list_type is None:
+                self.control_start(connected_user,
+                                   connected_user_role)
+            else:
+                self.control_event_list(connected_user,
+                                        connected_user_role,
+                                        list_type)
         else:
             capture_exception(result['error'])
             console.print(MSG_ERROR)

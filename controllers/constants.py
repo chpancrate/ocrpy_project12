@@ -12,6 +12,8 @@ MSG_CLIENT_NOT_FOUND = 'Le client est inexistant'
 MSG_CONTRACT_NOT_FOUND = ('Le contrat est inexistant, '
                           'est déjà lié à un évènement '
                           'ou non lié à un de vos client')
+MSG_EVENT_NOT_FOUND = "L'évènement est inexistant"
+
 MSG_WRONG_EMAIL_FORMAT = "Le format de l'email est incorrect"
 MSG_WRONG_NUMBER_FORMAT = "La donnée doit être nombre"
 MSG_WRONG_COMMERCIAL_USER = ("L'utilisateur doit faire partie"

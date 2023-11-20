@@ -47,7 +47,8 @@ def navigation_handler(controller,
                        choice,
                        connected_user,
                        connected_user_role,
-                       token):
+                       token,
+                       list_type=None):
     if choice[0] == MC_EXIT:
         controller.exit()
 
@@ -79,7 +80,8 @@ def navigation_handler(controller,
     elif choice[0] == MC_CONTRACT_DETAILS:
         controller.control_contract_details(choice[1],
                                             connected_user,
-                                            connected_user_role)
+                                            connected_user_role,
+                                            list_type)
     elif choice[0] == MC_CONTRACT_UPDATE:
         controller.control_contract_update(choice[1],
                                            choice[2],
@@ -106,7 +108,8 @@ def navigation_handler(controller,
     elif choice[0] == MC_EVENT_DETAILS:
         controller.control_event_details(choice[1],
                                          connected_user,
-                                         connected_user_role)
+                                         connected_user_role,
+                                         list_type)
     elif choice[0] == MC_EVENT_UPDATE:
         controller.control_event_update(choice[1],
                                         choice[2],
