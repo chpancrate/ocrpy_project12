@@ -13,6 +13,7 @@ pytest = "*"
 pyjwt = "*"
 rich = "*"
 sentry-sdk = "*"
+coverage = "*"
 
 [dev-packages]
 

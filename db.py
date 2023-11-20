@@ -22,8 +22,8 @@ elif db_engine == "sqlite":
 elif db_engine == "postgresql":
     db_url = f"postgresql://{db_user}:{db_pass}@{db_host}/{db_name}"
 elif db_engine == "test":
-    db_url = f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/testdb"
-    # db_url = "sqlite:///test.db"
+    # db_url = f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/testdb"
+    db_url = "sqlite:///test.db"
 
 engine = create_engine(db_url)
 

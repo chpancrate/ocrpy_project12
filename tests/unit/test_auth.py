@@ -6,7 +6,9 @@ from sqlalchemy.orm import sessionmaker
 
 from ..conftest import ValueStorage
 
-import authentication.auth_functions as auth
+from authentication.auth_models import (AuthenticationManager,
+                                        INVALID_TOKEN,
+                                        INVALID_PASSWORD)
 from db import engine, Base
 from models.user_dal_functions import (create_user,
                                        get_user_by_id)
@@ -22,10 +24,12 @@ class TestAuthentication():
         Base.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         cls.session = Session()
+        cls.auth = AuthenticationManager()
 
     def teardown_class(self):
         Base.metadata.drop_all(engine)
         self.session.close()
+        pass
 
     def test_create_tokens(self):
         """
@@ -36,7 +40,7 @@ class TestAuthentication():
 
         user_id = 2
 
-        result = auth.create_tokens(user_id)
+        result = self.auth.create_tokens(user_id)
 
         acces_token = result['access']
         refresh_token = result['refresh']
@@ -65,7 +69,7 @@ class TestAuthentication():
         email = user_fix['email']
         password = user_fix['password']
 
-        result = auth.password_authentication(email, password)
+        result = self.auth.password_authentication(email, password)
 
         assert result['status'] == "ok"
 
@@ -96,10 +100,10 @@ class TestAuthentication():
         email = result['user'].email
         password = 'wrong_password'
 
-        result = auth.password_authentication(email, password)
+        result = self.auth.password_authentication(email, password)
 
         assert result['status'] == "ko"
-        assert result['error'] == auth.INVALID_PASSWORD
+        assert result['error'] == INVALID_PASSWORD
 
     def test_request_token_with_refresh(self):
         """
@@ -109,21 +113,29 @@ class TestAuthentication():
         """
         user_id = 2
 
-        result = auth.create_tokens(user_id)
+        result = self.auth.create_tokens(user_id)
 
         refresh_token = result['refresh']
 
-        result = auth.request_token_with_refresh(refresh_token)
+        result = self.auth.request_token_with_refresh(refresh_token)
 
         assert result['status'] == 'ok'
 
-        acces_token = result['access']
+        decoded_access_token = jwt.decode(
+            jwt=result['access'],
+            key=SECRET_KEY,
+            algorithms=["HS256"]
+            )
+        assert decoded_access_token['type'] == 'access'
+        assert decoded_access_token['user_id'] == user_id
 
-        decoded_acces_token = jwt.decode(jwt=acces_token,
-                                         key=SECRET_KEY,
-                                         algorithms=["HS256"])
-
-        assert decoded_acces_token['user_id'] == user_id
+        decoded_refresh_token = jwt.decode(
+            jwt=result['refresh'],
+            key=SECRET_KEY,
+            algorithms=["HS256"]
+            )
+        assert decoded_refresh_token['type'] == 'refresh'
+        assert decoded_refresh_token['user_id'] == user_id
 
     def test_request_token_with_refresh_with_access_token(self):
         """
@@ -133,14 +145,14 @@ class TestAuthentication():
         """
         user_id = 2
 
-        result = auth.create_tokens(user_id)
+        result = self.auth.create_tokens(user_id)
 
         refresh_token = result['access']
 
-        result = auth.request_token_with_refresh(refresh_token)
+        result = self.auth.request_token_with_refresh(refresh_token)
 
         assert result['status'] == 'ko'
-        assert result['error'] == auth.INVALID_TOKEN
+        assert result['error'] == INVALID_TOKEN
 
     def test_request_token_with_refresh_with_expired_token(self):
         """
@@ -160,12 +172,12 @@ class TestAuthentication():
                                    key=SECRET_KEY,
                                    algorithm="HS256")
 
-        result = auth.request_token_with_refresh(refresh_token)
+        result = self.auth.request_token_with_refresh(refresh_token)
 
         assert result['status'] == 'ko'
-        assert result['error'] == auth.INVALID_TOKEN
+        assert result['error'] == INVALID_TOKEN
 
-    def test_check_access_token(self):
+    def test_check_token(self):
         """
         GIVEN an access_token
         WHEN you call check_access_token
@@ -173,33 +185,16 @@ class TestAuthentication():
         """
         user_id = 2
 
-        result = auth.create_tokens(user_id)
+        result = self.auth.create_tokens(user_id)
 
         access_token = result['access']
 
-        result = auth.check_access_token(access_token)
+        result = self.auth.check_token(access_token)
 
         assert result['status'] == 'ok'
         assert result['user_id'] == user_id
 
-    def test_check_aceess_token_with_wrong_token(self):
-        """
-        GIVEN a refresh_token
-        WHEN you call check_access_token
-        THEN the status ko and the error are returned
-        """
-        user_id = 2
-
-        result = auth.create_tokens(user_id)
-
-        refresh_token = result['refresh']
-
-        result = auth.check_access_token(refresh_token)
-
-        assert result['status'] == 'ko'
-        assert result['error'] == auth.INVALID_TOKEN
-
-    def test_check_aceess_token_with_expired_token(self):
+    def test_check_token_with_expired_token(self):
         """
         GIVEN a refresh_token
         WHEN you call check_token
@@ -217,7 +212,7 @@ class TestAuthentication():
                                   key=SECRET_KEY,
                                   algorithm="HS256")
 
-        result = auth.check_access_token(access_token)
+        result = self.auth.check_token(access_token)
 
         assert result['status'] == 'ko'
-        assert result['error'] == auth.INVALID_TOKEN
+        assert result['error'] == INVALID_TOKEN

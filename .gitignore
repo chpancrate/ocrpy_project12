@@ -162,4 +162,5 @@ cython_debug/
 .vscode/
 
 test.db
+test.db.old
 create_data.py

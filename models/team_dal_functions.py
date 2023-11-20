@@ -192,6 +192,8 @@ def delete_team(team_id):
                     .filter(Team.id == team_id)
                     .first())
 
+            # for user in team.users:
+            #     print('delf user id:', user.id)
             if not team.users:
                 rows_affected = (session.query(Team)
                                  .filter(Team.id == team_id)
