@@ -9,9 +9,10 @@ DATE_FORMAT_DISP = 'JJ/MM/AAAA HH:MM'
 MSG_ERROR = ("une erreur s'est produite veuillez réessayer,\n"
              "si l'erreur persiste contactez votre administrateur")
 MSG_CLIENT_NOT_FOUND = 'Le client est inexistant'
-MSG_CONTRACT_NOT_FOUND = ('Le contrat est inexistant, '
-                          'est déjà lié à un évènement '
-                          'ou non lié à un de vos client')
+MSG_CONTRACT_NOT_FOUND = ('Le contrat est : inexistant, '
+                          'déjà lié à un évènement '
+                          'non lié à un de vos client '
+                          'ou non signé')
 MSG_EVENT_NOT_FOUND = "L'évènement est inexistant"
 
 MSG_WRONG_EMAIL_FORMAT = "Le format de l'email est incorrect"
