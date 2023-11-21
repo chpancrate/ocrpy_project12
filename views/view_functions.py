@@ -1,6 +1,7 @@
 import os
 import re
 import datetime
+from dotenv import load_dotenv
 
 from rich.console import Console
 from rich.layout import Layout
@@ -100,6 +101,10 @@ from controllers.constants import (MSG_ERROR,
                                    DATE_FORMAT,
                                    PRPT_NEW_DATA
                                    )
+
+load_dotenv()
+
+clear_screen_setup = os.getenv("CLEAR_SCREEN")
 
 CLIENT_COLOR = 'green'
 CONTRACT_COLOR = 'yellow'
@@ -292,8 +297,10 @@ def display_date(date):
 
 
 def clear_screen():
-    # os.system("cls")
-    pass
+    if clear_screen_setup == 'true':
+        os.system("cls")
+    else:
+        pass
 
 
 def display_prompt(prompt):

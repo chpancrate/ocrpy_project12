@@ -1240,7 +1240,8 @@ class MainController:
                 if result['status'] == 'ok':
                     self.control_contract_details(result['contract_id'],
                                                   connected_user,
-                                                  connected_user_role)
+                                                  connected_user_role,
+                                                  MC_CONTRACT_LIST)
                 else:
                     capture_exception(result['error'])
                     console.print(MSG_ERROR)
@@ -1805,7 +1806,8 @@ class MainController:
                 if result['status'] == 'ok':
                     self.control_event_details(result['event_id'],
                                                connected_user,
-                                               connected_user_role)
+                                               connected_user_role,
+                                               MC_EVENT_LIST)
                 else:
                     capture_exception(result['error'])
                     console.print(MSG_ERROR)

@@ -263,18 +263,26 @@ class TestDalTeam():
         user = (self.session.query(User)
                     .filter(User.id == ValueStorage.user_id)
                     .first())
-        print('user id: ', user.id)
-        print('user team_id: ', user.team_id)
+        print('BR user id: ', user.id)
+        print('BR user team_id: ', user.team_id)
 
         user.team_id = None
 
         self.session.commit()
+        team = (self.session.query(Team)
+                    .filter(Team.id == ValueStorage.team_id)
+                    .first())
+        print('AR team id: ', team.id)
+        print('AR team users: ', team.users)
+
+        for user in team.users:
+            print('AR user team_id: ', user.team_id)
 
         user = (self.session.query(User)
                     .filter(User.id == ValueStorage.user_id)
                     .first())
-        print('user id: ', user.id)
-        print('user team_id: ', user.team_id)
+        print('AR user id: ', user.id)
+        print('AR user team_id (2) : ', user.team_id)
 
         print('team id:', ValueStorage.team_id)
 
@@ -292,4 +300,5 @@ class TestDalTeam():
 
         assert team is None
         """
+
         pass

@@ -84,7 +84,8 @@ class Team(Base):
     role_id = Column(Integer, ForeignKey('roles.id'), nullable=False)
     users = relationship('User',
                          backref='users',
-                         lazy='dynamic')
+                         lazy='dynamic',
+                         passive_deletes=True)
 
     def deactivate(self):
         self.active = False

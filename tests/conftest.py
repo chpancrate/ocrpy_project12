@@ -34,7 +34,7 @@ def team_fix():
 
 @pytest.fixture
 def role_fix():
-    return {'name': "role name",
+    return {'name': "role name 2",
             'active': True,
             }
 

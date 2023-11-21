@@ -14,6 +14,7 @@ db_pass = os.getenv("DB_PASS")
 db_host = os.getenv("DB_HOST")
 db_name = os.getenv("DB_NAME")
 db_engine = os.getenv("DB_ENGINE")
+print(db_engine)
 
 if db_engine == "mysql":
     db_url = f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/{db_name}"
@@ -22,8 +23,9 @@ elif db_engine == "sqlite":
 elif db_engine == "postgresql":
     db_url = f"postgresql://{db_user}:{db_pass}@{db_host}/{db_name}"
 elif db_engine == "test":
-    # db_url = f"mysql+pymysql://{db_user}:{db_pass}@{db_host}/testdb"
     db_url = "sqlite:///test.db"
+
+print(db_url)
 
 engine = create_engine(db_url)
 
