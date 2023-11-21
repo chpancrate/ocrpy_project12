@@ -1,5 +1,6 @@
 import pytest
 from datetime import datetime
+from models.client_models import CONTRACT_STATUS
 
 
 class ValueStorage():
@@ -33,6 +34,14 @@ def team_fix():
 
 
 @pytest.fixture
+def team2_fix():
+    return {'name': "team name 2",
+            'active': True,
+            'role_id': None
+            }
+
+
+@pytest.fixture
 def role_fix():
     return {'name': "role name 2",
             'active': True,
@@ -56,7 +65,7 @@ def contract_fix():
     return {'client_id': None,
             'total_amount': 10000.00,
             'amount_unpaid': 9000.00,
-            'status': 'unsigned',
+            'status': CONTRACT_STATUS[1],
             'active': True,
             }
 

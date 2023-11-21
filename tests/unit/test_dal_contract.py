@@ -1,7 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 
 from models.user_models import User
-from models.client_models import Client, Contract, Event
+from models.client_models import Contract, CONTRACT_STATUS
 import models.contract_dal_functions as dal
 import models.client_dal_functions as dalc
 from db import (engine,
@@ -83,7 +83,7 @@ class TestDalContract():
         """
         contract_dict = {}
         contract_dict['id'] = ValueStorage.contract_id
-        new_status = 'signed'
+        new_status = CONTRACT_STATUS[0]
         contract_dict['status'] = new_status
 
         result = dal.update_contract(contract_dict)
@@ -107,7 +107,7 @@ class TestDalContract():
         """
         contract_dict = {}
         contract_dict['id'] = 999
-        new_status = 'signed'
+        new_status = CONTRACT_STATUS[0]
         contract_dict['status'] = new_status
 
         result = dal.update_contract(contract_dict)
@@ -218,3 +218,80 @@ class TestDalContract():
 
         assert result['status'] == "ko"
         assert result['error'] == DB_RECORD_NOT_FOUND
+
+    def test_get_all_contracts(self):
+        """
+        GIVEN
+        WHEN you call dal.get_all_contracts
+        THEN the status and a list of all contracts is returned
+        """
+        contract = (self.session.query(Contract)
+                    .filter(Contract.id == ValueStorage.contract_id)
+                    .first())
+
+        result = dal.get_all_contracts()
+
+        assert result['status'] == "ok"
+
+        assert result['contracts'][0].id == contract.id
+        assert result['contracts'][0].status == contract.status
+        assert result['contracts'][0].total_amount == contract.total_amount
+
+    def test_get_unsigned_contracts(self):
+        """
+        GIVEN
+        WHEN you call dal.get_unsigned_contracts
+        THEN the status and a list of all unsigned contracts are returned
+        """
+        contract = (self.session.query(Contract)
+                    .filter(Contract.id == ValueStorage.contract_id)
+                    .first())
+        # contract status is signed from previous test
+        assert contract.status == CONTRACT_STATUS[0]
+
+        result = dal.get_unsigned_contracts()
+
+        assert result['status'] == "ok"
+        # unsigned contracts list is now empty
+        assert result['contracts'] == []
+
+        # unsign contract
+        contract.status = CONTRACT_STATUS[1]
+        self.session.commit()
+
+        result = dal.get_unsigned_contracts()
+
+        assert result['status'] == "ok"
+        # unsigned contacts list now have a record
+        assert result['contracts'][0].id == contract.id
+        assert result['contracts'][0].status == CONTRACT_STATUS[1]
+
+    def test_get_unpaid_contracts(self):
+        """
+        GIVEN
+        WHEN you call dal.get_unpaid_contracts
+        THEN the status and a list of all unpaid contracts are returned
+        """
+        contract = (self.session.query(Contract)
+                    .filter(Contract.id == ValueStorage.contract_id)
+                    .first())
+
+        # contract is unpaid
+        assert contract.amount_unpaid != 0
+
+        result = dal.get_unpaid_contracts()
+
+        assert result['status'] == "ok"
+        # unsigned contacts list now have a record
+        assert result['contracts'][0].id == contract.id
+        assert result['contracts'][0].amount_unpaid == contract.amount_unpaid
+
+        # fully pay contract
+        contract.amount_unpaid = 0
+        self.session.commit()
+
+        result = dal.get_unpaid_contracts()
+
+        assert result['status'] == "ok"
+        # unsigned contracts list is now empty
+        assert result['contracts'] == []

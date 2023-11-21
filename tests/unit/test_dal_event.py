@@ -1,7 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 
 from models.user_models import User
-from models.client_models import Client, Contract, Event
+from models.client_models import Event
 import models.event_dal_functions as dal
 import models.client_dal_functions as dalc
 import models.contract_dal_functions as dalo
@@ -227,4 +227,72 @@ class TestDalEvent():
         assert result['status'] == "ko"
         assert result['error'] == DB_RECORD_NOT_FOUND
 
+    def test_get_all_events(self):
+        """
+        GIVEN
+        WHEN you call dal.get_all_events
+        THEN the status and the list of all events is returned
+        """
+        event = (self.session.query(Event)
+                 .filter(Event.id == ValueStorage.event_id)
+                 .first())
 
+        result = dal.get_all_events()
+
+        assert result['status'] == "ok"
+
+        assert result['events'][0].id == event.id
+        assert result['events'][0].title == event.title
+        assert result['events'][0].start_date == event.start_date
+
+    def test_get_event_unassigned(self):
+        """
+        GIVEN
+        WHEN you call dal.get_event_unassigned
+        THEN the status and the list of all unassigned events is returned
+        """
+        event = (self.session.query(Event)
+                 .filter(Event.id == ValueStorage.event_id)
+                 .first())
+        # check the event is unassigned
+        assert event.support_contact_id is None
+
+        result = dal.get_event_unassigned()
+
+        assert result['status'] == "ok"
+
+        assert result['events'][0].id == event.id
+        assert result['events'][0].title == event.title
+        assert result['events'][0].start_date == event.start_date
+
+        # assign event
+        event.support_contact_id = ValueStorage.user_id
+        self.session.commit()
+
+        result = dal.get_event_unassigned()
+
+        # list is now empty
+        assert result['status'] == "ok"
+        assert result['events'] == []
+
+    def test_get_supported_event(self):
+        """
+        GIVEN a user_id
+        WHEN you call dal.get_supported_event
+        THEN the status and the list of all events assigned to user_id
+        """
+        user_id = ValueStorage.user_id
+
+        event = (self.session.query(Event)
+                 .filter(Event.id == ValueStorage.event_id)
+                 .first())
+        # check the event is assigned to user_id
+        assert event.support_contact_id == user_id
+
+        result = dal.get_supported_event(user_id)
+
+        assert result['status'] == "ok"
+
+        assert result['events'][0].id == event.id
+        assert result['events'][0].title == event.title
+        assert result['events'][0].start_date == event.start_date

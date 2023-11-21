@@ -192,7 +192,7 @@ def delete_team(team_id):
                     .filter(Team.id == team_id)
                     .first())
 
-            if not team.users:
+            if team.users.all() == []:
                 rows_affected = (session.query(Team)
                                  .filter(Team.id == team_id)
                                  .delete())

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import sessionmaker
 
 from models.user_models import User
-from models.client_models import Client, Contract, Event
+from models.client_models import Client
 import models.client_dal_functions as dal
 from db import (engine,
                 Base,
@@ -210,3 +210,20 @@ class TestDalClient():
 
         assert result['status'] == "ko"
         assert result['error'] == DB_RECORD_NOT_FOUND
+
+    def test_get_all_clients(self):
+        """
+        GIVEN a client_id
+        WHEN you call dal.get_all_clients using the id
+        THEN the status and client are returned
+        """
+        client = (self.session.query(Client)
+                  .filter(Client.id == ValueStorage.client_id)
+                  .first())
+
+        result = dal.get_all_clients()
+
+        assert result['status'] == "ok"
+
+        assert result['clients'][0].id == client.id
+        assert result['clients'][0].first_name == client.first_name

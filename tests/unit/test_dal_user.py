@@ -1,12 +1,12 @@
 from argon2 import PasswordHasher
 from sqlalchemy.orm import sessionmaker
 
-from models.user_models import User, Team, Role
+from models.user_models import User
+from models.client_models import Client
 import models.user_dal_functions as dal
 from db import (engine,
                 Base,
-                DB_RECORD_NOT_FOUND,
-                DB_TEAM_NOT_EMPTY
+                DB_RECORD_NOT_FOUND
                 )
 from ..conftest import ValueStorage
 
@@ -279,12 +279,102 @@ class TestDalUser():
         assert result['status'] == "ko"
         assert result['error'] == DB_RECORD_NOT_FOUND
 
+    def test_get_user_by_employee_id(self, user_fix):
+        """
+        GIVEN an existing user employee_number
+        WHEN you call get_user_by_employee_id with the user employee_number
+        THEN the status ok is returned with the user object
+        """
+        user = (self.session.query(User)
+                .filter(User.employee_number == user_fix['employee_number'])
+                .first())
+
+        result = dal.get_user_by_employee_id(user_fix['employee_number'])
+
+        assert result['status'] == "ok"
+
+        assert result['user'].id == user.id
+        assert result['user'].first_name == user.first_name
+        assert result['user'].last_name == user.last_name
+
+    def test_get_user_by_employee_id_with_error(self):
+        """
+        GIVEN a user id
+        WHEN you call get_user_by_employee_id with the user employee_number
+             and an error occured
+        THEN the status ko is returned with the error
+        """
+        # set a wrong id
+        employee_number = 999
+
+        result = dal.get_user_by_employee_id(employee_number)
+
+        assert result['status'] == "ko"
+        assert result['error'] == DB_RECORD_NOT_FOUND
+
+    def test_get_all_users(self, user_fix):
+        """
+        GIVEN an existing user employee_number
+        WHEN you call get_user_by_employee_id with the user employee_number
+        THEN the status ok is returned with the user object
+        """
+        user = (self.session.query(User)
+                    .filter(User.id == ValueStorage.user_id)
+                    .first())
+
+        result = dal.get_all_users()
+
+        assert result['status'] == "ok"
+
+        assert result['users'][0].id == user.id
+        assert result['users'][0].first_name == user.first_name
+        assert result['users'][0].last_name == user.last_name
+
+    def test_get_client_list_for_user(self, client_fix):
+        """
+        GIVEN an existing user employee_number
+        WHEN you call get_user_by_employee_id with the user employee_number
+        THEN the status ok is returned with the user object
+        """
+        user = (self.session.query(User)
+                    .filter(User.id == ValueStorage.user_id)
+                    .first())
+
+        client = Client(first_name=client_fix['first_name'],
+                        last_name=client_fix['last_name'],
+                        email=client_fix['email'],
+                        telephone=client_fix['telephone'],
+                        enterprise=client_fix['enterprise'],
+                        commercial_contact_id=user.id,
+                        active=client_fix['active'],
+                        )
+
+        self.session.add(client)
+        self.session.commit()
+        ValueStorage.client_id = client.id
+
+        result = dal.get_client_list_for_user(user.id)
+
+        assert result['status'] == "ok"
+
+        assert result['data'][0].id == client.id
+        assert result['data'][0].first_name == client.first_name
+        assert result['data'][0].last_name == client.last_name
+
     def test_delete_user(self):
         """
         GIVEN an existing user id
         WHEN you call delete_user with the user id
         THEN the user is deleted in database and the status ok is returned
         """
+        # remove client added in last test from user
+        affected_rows = (self.session.query(Client)
+                         .filter(Client.id == ValueStorage.client_id)
+                         .delete())
+
+        assert affected_rows == 1
+        self.session.commit()
+
         # check user exist
         user = (self.session.query(User)
                     .filter(User.id == ValueStorage.user_id)

@@ -1,4 +1,3 @@
-from argon2 import PasswordHasher
 from sqlalchemy.orm import sessionmaker
 
 from models.user_models import User, Team, Role
@@ -244,61 +243,38 @@ class TestDalTeam():
         assert result['status'] == "ko"
         assert result['error'] == DB_TEAM_NOT_EMPTY
 
-    def test_delete_team(self):
+    def test_delete_team(self, team2_fix):
         """
         GIVEN a team id
         WHEN you call dal.delete_team using the id
         THEN the team is deleted in the database
              and the status and team_id are returned
         """
-        """
-        # check team exist
-        team = (self.session.query(Team)
-                    .filter(Team.id == ValueStorage.team_id)
-                    .first())
 
-        assert team
+        # create team
+        team2_fix['role_id'] = ValueStorage.role_id
 
-        # remove user (added in previous test)
-        user = (self.session.query(User)
-                    .filter(User.id == ValueStorage.user_id)
-                    .first())
-        print('BR user id: ', user.id)
-        print('BR user team_id: ', user.team_id)
-
-        user.team_id = None
+        result = dal.create_team(team2_fix)
 
         self.session.commit()
+
+        # assert team exist
         team = (self.session.query(Team)
-                    .filter(Team.id == ValueStorage.team_id)
-                    .first())
-        print('AR team id: ', team.id)
-        print('AR team users: ', team.users)
+                .filter(Team.id == result['team_id'])
+                .first())
+        stored_team_id = result['team_id']
+        assert team
 
-        for user in team.users:
-            print('AR user team_id: ', user.team_id)
+        result = dal.delete_team(team.id)
 
-        user = (self.session.query(User)
-                    .filter(User.id == ValueStorage.user_id)
-                    .first())
-        print('AR user id: ', user.id)
-        print('AR user team_id (2) : ', user.team_id)
-
-        print('team id:', ValueStorage.team_id)
-
-        result = dal.delete_team(ValueStorage.team_id)
-        print(result['error'])
         assert result['status'] == "ok"
-        assert result['team_id'] == ValueStorage.team_id
+        assert result['team_id'] == stored_team_id
 
         self.session.commit()
 
         # check team deleted
         team = (self.session.query(Team)
-                    .filter(Team.id == ValueStorage.team_id)
+                    .filter(Team.id == stored_team_id)
                     .first())
 
         assert team is None
-        """
-
-        pass

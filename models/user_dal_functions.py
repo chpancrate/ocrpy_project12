@@ -3,7 +3,6 @@
 
 from argon2 import PasswordHasher
 from sqlalchemy import exc
-from sqlalchemy.orm import subqueryload
 
 from db import (session_maker,
                 DB_RECORD_NOT_FOUND

@@ -21,7 +21,6 @@ def get_user_role(user_id):
             if result_role['status'] == 'ok':
                 result['status'] = 'ok'
                 result['user_role'] = result_role['role'].name
-                return result
             else:
                 result['status'] = 'ko'
                 result['error'] = result_role['error']
@@ -31,3 +30,5 @@ def get_user_role(user_id):
     else:
         result['status'] = 'ko'
         result['error'] = result_user['error']
+
+    return result

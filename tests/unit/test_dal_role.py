@@ -1,12 +1,10 @@
-from argon2 import PasswordHasher
 from sqlalchemy.orm import sessionmaker
 
-from models.user_models import User, Team, Role
+from models.user_models import Role
 import models.role_dal_functions as dal
 from db import (engine,
                 Base,
-                DB_RECORD_NOT_FOUND,
-                DB_TEAM_NOT_EMPTY
+                DB_RECORD_NOT_FOUND
                 )
 from ..conftest import ValueStorage
 

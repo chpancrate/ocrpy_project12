@@ -256,11 +256,11 @@ def get_event_unassigned():
     result['status'] = "ok"
     try:
         with session_maker() as session:
-            event = (session.query(Event)
-                     .filter(Event.support_contact_id is None)
-                     .all())
-            if event is not None:
-                result['events'] = event
+            events = (session.query(Event)
+                      .filter(Event.support_contact_id == None)
+                      .all())
+            if events is not None:
+                result['events'] = events
             else:
                 result['status'] = "ko"
                 result['error'] = DB_RECORD_NOT_FOUND
