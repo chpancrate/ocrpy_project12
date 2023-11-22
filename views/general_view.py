@@ -1,10 +1,5 @@
-import os
-
 from rich.align import Align
-from rich.columns import Columns
 from rich.console import Group
-from rich.layout import Layout
-from rich.padding import Padding
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
@@ -15,7 +10,6 @@ from .view_functions import (
     header_display_create,
     login_header_display_create,
     sub_menu_display_create,
-    prompt_display_create,
     prompt_choice_decode,
     screen_layout,
     administration_screen_layout,
@@ -98,7 +92,12 @@ class Screen:
 
     @token_process
     def general(self, view_setup):
-        """display the start screen"""
+        """display the start screen
+        parameter :
+        view_setuup : data to setup the view
+        return :
+        choice : prompt input
+        """
 
         clear_screen()
 
@@ -257,7 +256,12 @@ class Screen:
 
     @token_process
     def details(self, view_setup):
-        """display the details screen"""
+        """display the details screen
+        parameter :
+        view_setuup : data to setup the view
+        return :
+        choice : prompt input
+        """
 
         clear_screen()
 
@@ -430,7 +434,7 @@ class Screen:
                                    justify="left",
                                    no_wrap=True,
                                    style="white")
-            
+
             if "contract_event" in view_setup["body"]["data"]:
                 table_event.add_row(
                     "Titre", ":", event.title)
@@ -589,7 +593,12 @@ class Screen:
 
     @token_process
     def creation(self, view_setup):
-        """display the creation screen"""
+        """display the creation screen
+        parameter :
+        view_setuup : data to setup the view
+        return :
+        choice : prompt input
+        """
 
         clear_screen()
 
@@ -833,7 +842,12 @@ class Screen:
 
     @token_process
     def user_administration(self, view_setup):
-        """display the user administration home page """
+        """display the user administration home page
+        parameter :
+        view_setuup : data to setup the view
+        return :
+        choice : prompt input
+        """
 
         clear_screen()
 
@@ -914,7 +928,12 @@ class Screen:
 
     @token_process
     def user_details(self, view_setup):
-        """display the user details page """
+        """display the user details page
+        parameter :
+        view_setuup : data to setup the view
+        return :
+        choice : prompt input
+        """
 
         clear_screen()
 
@@ -984,7 +1003,12 @@ class Screen:
 
     @token_process
     def user_creation(self, view_setup):
-        """display the creation screen"""
+        """display the creation screen
+        parameter :
+        view_setuup : data to setup the view
+        return :
+        choice : prompt input
+        """
 
         clear_screen()
 
@@ -1079,7 +1103,12 @@ class Screen:
         console.height = None
         return input_data
 
-    def login(self, view_setup):
+    def login(self):
+        """display the login screen
+        parameter :
+        return :
+        login_dict : login and password
+        """
 
         clear_screen()
 

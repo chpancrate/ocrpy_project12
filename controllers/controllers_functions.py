@@ -235,7 +235,7 @@ def validate_client(client_id):
 def validate_contract(contract_id, user_id):
     """
     validate that a contract:
-     - exist 
+     - exist
      - has no event linked
      - is for a client of the user
      - is signed

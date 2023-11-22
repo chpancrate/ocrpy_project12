@@ -70,7 +70,6 @@ from controllers.constants import (MSG_ERROR,
                                    PRPT_CLIENT_EMAIL,
                                    PRPT_CLIENT_TELEPHONE,
                                    PRPT_CLIENT_ENTERPRISE,
-                                   PRPT_CLIENT_COMMERCIAL_ID,
                                    PRPT_CLIENT_CREATION,
                                    PRPT_CLIENT_ID,
                                    PRPT_CONTRACT_TOTAL_AMOUNT,
@@ -84,7 +83,6 @@ from controllers.constants import (MSG_ERROR,
                                    PRPT_EVENT_LOCATION,
                                    PRPT_EVENT_ATTENDEES,
                                    PRPT_EVENT_NOTES,
-                                   PRPT_EVENT_SUPPORT_ID,
                                    PRPT_EVENT_CREATION,
                                    PRPT_USER_EMPLOYEE_ID,
                                    PRPT_USER_FIRST_NAME,
@@ -125,17 +123,14 @@ from .controllers_functions import (navigation_handler,
                                     create_view_setup,
                                     MC_CLIENT_LIST,
                                     MC_CLIENT_DETAILS,
-                                    MC_CLIENT_UPDATE,
                                     MC_CLIENT_CREATE,
                                     MC_CONTRACT_LIST,
                                     MC_CONTRACT_DETAILS,
-                                    MC_CONTRACT_UPDATE,
                                     MC_CONTRACT_CREATE,
                                     MC_CONTRACT_UNPAID_FILTER,
                                     MC_CONTRACT_UNSIGNED_FILTER,
                                     MC_EVENT_LIST,
                                     MC_EVENT_DETAILS,
-                                    MC_EVENT_UPDATE,
                                     MC_EVENT_CREATE,
                                     MC_EVENT_OWNED_FILTER,
                                     MC_EVENT_UNASSIGNED_FILTER,
@@ -143,10 +138,6 @@ from .controllers_functions import (navigation_handler,
                                     MC_USER_DETAILS,
                                     MC_USER_UPDATE,
                                     MC_USER_CREATE,
-                                    MC_EXIT,
-                                    MC_RETURN,
-                                    MC_INVALID,
-                                    MC_ABORT
                                     )
 
 from models.client_dal_functions import (get_client_by_id,
@@ -168,7 +159,7 @@ from models.event_dal_functions import (get_event_by_id,
                                         get_event_unassigned,
                                         get_supported_event
                                         )
-from models.client_models import Client, CONTRACT_STATUS
+from models.client_models import CONTRACT_STATUS
 from models.user_dal_functions import (get_user_by_id,
                                        get_user_by_email,
                                        get_all_users,
@@ -187,8 +178,6 @@ from .authorization_functions import (is_client_create_authorized,
                                       is_user_create_authorized,
                                       is_user_read_authorized,
                                       is_user_update_authorized,
-                                      MANAGEMENT_ROLE,
-                                      COMMERCIAL_ROLE,
                                       SUPPORT_ROLE)
 
 from db import DB_RECORD_NOT_FOUND
@@ -2321,7 +2310,7 @@ class MainController:
                 }
             }
 
-        result_screen = self.screen.login(view_setup)
+        result_screen = self.screen.login()
 
         email = result_screen['email']
         password = result_screen['password']

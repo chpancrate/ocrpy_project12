@@ -73,15 +73,15 @@ To learn more about sentry setup please follow the link : https://docs.sentry.io
 
 ### Database set-up
 
-In order to run the application you need to create the database structure. Once your database is created and you have filled the .env file. You can create the tables inthe Database by using alembic: 
+In order to run the application you need to create the database structure. Once your database is created and you have filled the .env file. You can create the tables in the Database by using alembic: 
 ```
 alembic upgrade heads
 ```
 
 ## Application launch
-To create the first user (admin user) run the script located in ./migrations:
+To setup the minimal needed data and create the first user (admin user) run the script db_initialization.py :
 ```
-python create_admin.py
+python db_initialization.py
 ```
 Be sure to update the password in the file first and then erase it from the file once used.
 

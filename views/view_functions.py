@@ -1,6 +1,4 @@
 import os
-import re
-import datetime
 from dotenv import load_dotenv
 
 from rich.console import Console
@@ -8,16 +6,9 @@ from rich.layout import Layout
 from rich.text import Text
 from rich.padding import Padding
 from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Prompt
 from rich.align import Align
 
-from models.user_dal_functions import get_user_by_id, get_user_by_employee_id
-from models.team_dal_functions import get_team_by_id
-from models.client_dal_functions import get_client_by_id
-from models.contract_dal_functions import get_contract_by_id
-from models.client_models import CONTRACT_STATUS
-
-from controllers.authorization_functions import owns_client, owns_event
 from controllers.controllers_functions import (MC_CLIENT_LIST,
                                                MC_CLIENT_DETAILS,
                                                MC_CLIENT_UPDATE,
@@ -40,64 +31,27 @@ from controllers.controllers_functions import (MC_CLIENT_LIST,
                                                MC_USER_CREATE,
                                                MC_EXIT,
                                                MC_RETURN,
-                                               MC_INVALID,
-                                               MC_ABORT
                                                )
-from controllers.constants import (MSG_ERROR,
-                                   MSG_CLIENT_NOT_FOUND,
-                                   MSG_ERROR_LOGIN,
-                                   MSG_WRONG_AUTHORIZATION,
-                                   MSG_CONTRACT_NOT_FOUND,
-                                   MSG_WRONG_CLIENT,
-                                   MSG_WRONG_COMMERCIAL_USER,
-                                   MSG_WRONG_DATE_FORMAT,
-                                   MSG_WRONG_EMAIL_FORMAT,
-                                   MSG_WRONG_EMPLOYEE_NUMBER,
-                                   MSG_WRONG_NUMBER_FORMAT,
-                                   MSG_WRONG_STATUS,
-                                   MSG_WRONG_SUPPORT_USER,
-                                   MSG_WRONG_TEAM,
-                                   MENU_CLIENTS_LIST_KEYS,
-                                   MENU_CLIENTS_LIST_LABEL,
+from controllers.constants import (MENU_CLIENTS_LIST_KEYS,
                                    MENU_CLIENTS_DETAILS_KEYS,
-                                   MENU_CLIENTS_DETAILS_LABEL,
                                    MENU_CLIENT_UPDATE_KEYS,
-                                   MENU_CLIENT_UPDATE_LABEL,
                                    MENU_CLIENT_CREATE_KEYS,
-                                   MENU_CLIENT_CREATE_LABEL,
                                    MENU_CONTRACTS_LIST_KEYS,
-                                   MENU_CONTRACTS_LIST_LABEL,
                                    MENU_CONTRACTS_DETAILS_KEYS,
-                                   MENU_CONTRACTS_DETAILS_LABEL,
                                    MENU_CONTRACT_UPDATE_KEYS,
-                                   MENU_CONTRACT_UPDATE_LABEL,
                                    MENU_CONTRACT_CREATE_KEYS,
-                                   MENU_CONTRACT_CREATE_LABEL,
                                    MENU_CONTRACT_FILTER_UNSIGNED_KEYS,
                                    MENU_CONTRACT_FILTER_UNPAID_KEYS,
                                    MENU_EVENTS_LIST_KEYS,
-                                   MENU_EVENTS_LIST_LABEL,
                                    MENU_EVENTS_DETAILS_KEYS,
-                                   MENU_EVENTS_DETAILS_LABEL,
                                    MENU_EVENT_UPDATE_KEYS,
-                                   MENU_EVENT_UPDATE_LABEL,
                                    MENU_EVENT_CREATE_KEYS,
-                                   MENU_EVENT_CREATE_LABEL,
                                    MENU_EVENT_FILTER_OWNED_KEYS,
                                    MENU_EVENT_FILTER_UNASSIGNED_KEYS,
                                    MENU_ADMINISTRATION_KEYS,
-                                   MENU_ADMINISTRATION_LABEL,
                                    MENU_USER_DETAILS_KEYS,
-                                   MENU_USER_DETAILS_LABEL,
                                    MENU_USER_UPDATE_KEYS,
-                                   MENU_USER_UPDATE_LABEL,
                                    MENU_USER_CREATE_KEYS,
-                                   MENU_USER_CREATE_LABEL,
-                                   MENU_EXIT_KEYS,
-                                   MENU_EXIT_LABEL,
-                                   MENU_RETURN_KEYS,
-                                   MENU_RETURN_LABEL,
-                                   FOOTER_TITLE,
                                    DATE_FORMAT,
                                    PRPT_NEW_DATA
                                    )
@@ -125,6 +79,16 @@ def menu_item(code, description):
 
 
 def screen_layout():
+    """ create general screen layout :
+    header
+        logo main_menu
+    body
+        clients
+        contracts
+        events
+    footer
+    """
+
     layout = Layout()
     header_height = 3
     footer_height = 6
@@ -148,6 +112,12 @@ def screen_layout():
 
 
 def administration_screen_layout():
+    """ create user administration screen layout :
+    header
+        logo main_menu
+    body
+    footer
+    """
     layout = Layout()
     header_height = 3
     footer_height = 6
@@ -170,7 +140,7 @@ def header_display_create(work_layout,
                           user_first_name,
                           user_last_name,
                           user_role):
-
+    """ create screen header """
     logo_str = ("EPIC EVENTS - CRM")
     logo_disp = Padding(logo_str, (1, 1), style="on blue", expand=False)
 
@@ -188,6 +158,7 @@ def header_display_create(work_layout,
 
 
 def login_header_display_create(work_layout):
+    """ create login screen header """
 
     logo_str = ("EPIC EVENTS - CRM")
     logo_disp = Padding(logo_str, (1, 1), style="on blue", expand=False)
@@ -202,6 +173,7 @@ def login_header_display_create(work_layout):
 
 
 def sub_menu_display_create(sub_menu_setup, title):
+    """ create submenu displyed in the footer """
     sub_menu_str = Text()
     for item in sub_menu_setup:
         sub_menu_str.append_text(menu_item(item[0], item[1]))
@@ -209,15 +181,6 @@ def sub_menu_display_create(sub_menu_setup, title):
                           style='blue',
                           title=title)
     return sub_menu_disp
-
-
-def prompt_display_create(prompt_setup):
-    choices = []
-    for item in prompt_setup['footer']['actions']:
-        choices.append(item[0])
-    choice = Prompt.ask("Quel est votre choix ?", choices=choices)
-
-    return choice
 
 
 def prompt_choice_decode(choice1):
@@ -290,6 +253,8 @@ def prompt_choice_decode(choice1):
 
 
 def display_date(date):
+    """ format date for display purpose"""
+
     if date is None:
         return ' '
     else:
@@ -297,6 +262,10 @@ def display_date(date):
 
 
 def clear_screen():
+    """ clear screen
+    used before screen display, can be disabled in .env file
+    """
+
     if clear_screen_setup == 'true':
         os.system("cls")
     else:

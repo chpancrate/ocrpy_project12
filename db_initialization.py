@@ -1,5 +1,6 @@
 # script to create needed dat for the use of epicevnts crm
 # THE ADMIN PASSWORD MUST BE CHANGED BEFORE RUNNING
+# other data from the admin can be changed except the team
 from db import (session_maker)
 from models.user_models import User, Team, Role
 
@@ -14,6 +15,7 @@ try:
         )
         session.add(role_management)
         session.commit()
+        print('management role created')
 
         # 'commercial' role creation
 
@@ -23,6 +25,7 @@ try:
         )
         session.add(role_commercial)
         session.commit()
+        print('commercial role created')
 
         # 'support' role creation
 
@@ -32,6 +35,7 @@ try:
         )
         session.add(role_support)
         session.commit()
+        print('support role created')
 
         # 'management' team creation
 
@@ -42,6 +46,7 @@ try:
         )
         session.add(team_management)
         session.commit()
+        print('management team created')
 
         # 'commercial' team creation
 
@@ -52,6 +57,7 @@ try:
         )
         session.add(team_commercial)
         session.commit()
+        print('commercial team created')
 
         # 'support' team creation
 
@@ -62,6 +68,7 @@ try:
         )
         session.add(team_support)
         session.commit()
+        print('support team created')
 
         # admin user creation
 
@@ -69,13 +76,14 @@ try:
             employee_number=999999999,
             first_name='admin',
             last_name='admin',
-            email='admin@crm.net',
+            email='admin@epicevents.com',
             password='password',  # TO BE MODIFIED BEFORE RUNNING THE SCRIPT
-            team_id='1',
+            team_id=team_management.id,
             active=True,
             )
         session.add(user)
         session.commit()
+        print('admin user created')
 
 except Exception as e:
     print(f"DB initialization failed with error : {str(e)}")
