@@ -299,7 +299,7 @@ class TestDalUser():
 
     def test_get_user_by_employee_id_with_error(self):
         """
-        GIVEN a user id
+        GIVEN a user employee number
         WHEN you call get_user_by_employee_id with the user employee_number
              and an error occured
         THEN the status ko is returned with the error
@@ -314,8 +314,8 @@ class TestDalUser():
 
     def test_get_all_users(self, user_fix):
         """
-        GIVEN an existing user employee_number
-        WHEN you call get_user_by_employee_id with the user employee_number
+        GIVEN
+        WHEN you call get_all_users with the user employee_number
         THEN the status ok is returned with the user object
         """
         user = (self.session.query(User)

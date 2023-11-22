@@ -166,7 +166,8 @@ from models.user_dal_functions import (get_user_by_id,
                                        update_user,
                                        create_user,
                                        )
-from models.team_dal_functions import (get_team_by_id)
+from models.team_dal_functions import (get_team_by_id,
+                                       get_all_teams)
 from models.general_dal_functions import get_user_role
 
 from .authorization_functions import (is_client_create_authorized,
@@ -2208,6 +2209,13 @@ class MainController:
                                        prompt
                                        )
 
+        result = get_all_teams()
+        teams_list = []
+        for team in result['teams']:
+            teams_list.append((team.id, team.name))
+
+        body_data['teams_list'] = teams_list
+
         prompt['label'] = PRPT_USER_EMPLOYEE_ID
         input_data, token = self.screen.user_creation(view_setup,
                                                       self.no_tokens)
@@ -2299,22 +2307,12 @@ class MainController:
     ##################
     def login(self):
 
-        body_data = {}
-        view_setup = {
-            'type': 'user_login',
-            'body': {
-                'data': body_data},
-            'footer': {
-                'title': 'Actions possibles',
-                'actions': []
-                }
-            }
-
         result_screen = self.screen.login()
 
         email = result_screen['email']
         password = result_screen['password']
         result = self.auth.password_authentication(email, password)
+
         if result['status'] == 'ok':
             access_token = result['access']
             refresh_token = result['refresh']

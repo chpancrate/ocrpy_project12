@@ -209,6 +209,23 @@ class TestDalTeam():
         assert result['status'] == "ko"
         assert result['error'] == DB_RECORD_NOT_FOUND
 
+    def test_get_all_teams(self):
+        """
+        GIVEN
+        WHEN you call get_all_teams with the user employee_number
+        THEN the status ok is returned with the user object
+        """
+        team = (self.session.query(Team)
+                    .filter(Team.id == ValueStorage.team_id)
+                    .first())
+
+        result = dal.get_all_teams()
+
+        assert result['status'] == "ok"
+
+        assert result['teams'][0].id == team.id
+        assert result['teams'][0].name == team.name
+
     def test_delete_team_with_user(self, user_fix):
         """
         GIVEN a team id

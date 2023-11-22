@@ -1085,6 +1085,19 @@ class Screen:
                            ":",
                            team_id)
 
+        table_user.add_row(" ",
+                           " ",
+                           " ")
+
+        table_user.add_row("Equipes :",
+                           " ",
+                           " ")
+
+        for team in body_data['teams_list']:
+            table_user.add_row(str(team[0]),
+                               ":",
+                               team[1])
+
         centered_table_user = Align.center(table_user)
         user_disp = Panel(centered_table_user,
                           style=USER_COLOR,

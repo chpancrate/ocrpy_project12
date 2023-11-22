@@ -172,6 +172,31 @@ def get_team_by_id(team_id):
     return result
 
 
+def get_all_teams():
+    """ retrieve all teams in database
+    parameters :
+    returns result dictionnary with keys :
+    'status': ok or ko
+    'teams': list of teams object (if status == ok)
+    'error': error details (if status == ko)
+    """
+    result = {}
+    result['status'] = "ok"
+    try:
+        with session_maker() as session:
+            teams = session.query(Team).all()
+            if teams is not None:
+                result['teams'] = teams
+            else:
+                result['status'] = "ko"
+                result['error'] = DB_RECORD_NOT_FOUND
+    except exc.SQLAlchemyError as e:
+        result['status'] = "ko"
+        result['error'] = e
+
+    return result
+
+
 def delete_team(team_id):
     """ delete team in database
     no user must be using the team
