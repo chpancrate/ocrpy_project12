@@ -164,7 +164,7 @@ class Screen:
                              no_wrap=True,
                              style="white")
             table.add_column("Client No",
-                             justify="left",
+                             justify="center",
                              no_wrap=True,
                              style="white")
             table.add_column("Montant total",
@@ -208,16 +208,18 @@ class Screen:
             table.add_column(
                 "Titre", justify="left", no_wrap=True, style="white")
             table.add_column(
-                "No contrat", justify="left", no_wrap=True, style="white")
+                "No contrat", justify="center", no_wrap=True, style="white")
             table.add_column(
                 "Date début", justify="left", no_wrap=True, style="white")
             table.add_column(
                 "Date fin", justify="left", no_wrap=True, style="white")
             table.add_column(
                 "Lieu", justify="left", no_wrap=True, style="white")
-            table.add_column(
-                "Nb de personnes", justify="left", no_wrap=True, style="white"
-            )
+            table.add_column("Nb de personnes",
+                             justify="center",
+                             no_wrap=True,
+                             style="white"
+                             )
 
             for event in events_data:
                 table.add_row(
@@ -323,7 +325,7 @@ class Screen:
                                        no_wrap=True,
                                        style="white")
             table_contracts.add_column("Client No",
-                                       justify="left",
+                                       justify="center",
                                        no_wrap=True,
                                        style="white")
             table_contracts.add_column("Montant total",

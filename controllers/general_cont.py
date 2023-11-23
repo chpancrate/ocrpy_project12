@@ -218,10 +218,12 @@ class MainController:
                                        tokens
                                        )
 
+        # retrieve clients followed by user
         clients_data = client_list(connected_user.id)
         body_data['clients'] = clients_data
         body_data['clients_title'] = TITLE_CLIENTS_HOME
 
+        # retrieve contracts followed by user
         contracts_data = []
         for client in clients_data:
             result = get_client_by_id(client.id)
@@ -230,12 +232,22 @@ class MainController:
         body_data['contracts'] = contracts_data
         body_data['contracts_title'] = TITLE_CONTRACTS_HOME
 
+        # retrieve events followed by user
         events_data = []
-        for contract in contracts_data:
-            result = get_contract_by_id(contract.id)
-            for event in result['contract'].events:
-                events_data.append(event)
-        body_data['events'] = events_data
+        if connected_user_role == SUPPORT_ROLE:
+            result = get_supported_event(connected_user.id)
+            if result['status'] == 'ok':
+                body_data['events'] = result['events']
+            elif (result['status'] == 'ko'
+                  and result['error'] == DB_RECORD_NOT_FOUND):
+                body_data['events'] = []
+        else:
+            for contract in contracts_data:
+                result = get_contract_by_id(contract.id)
+                for event in result['contract'].events:
+                    events_data.append(event)
+            body_data['events'] = events_data
+
         body_data['events_title'] = TITLE_EVENTS_HOME
 
         # actions menu creation, taking role into account
