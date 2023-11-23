@@ -454,7 +454,7 @@ class Screen:
                 # Event Support contact
                 support_contact_disp = Text()
                 support_contact_disp.append('Contact support: ')
-                if 'contract_event_support' in view_setup["body"]["data"]:
+                if event_support is not None:
                     support_contact_disp.append(event_support.full_name(),
                                                 style='white')
 
@@ -585,7 +585,7 @@ class Screen:
                                   MC_EVENT_DETAILS]:
             choice = display_prompt(view_setup['prompt'])
             return prompt_choice_decode(choice)
-        elif view_setup['type'] == [MC_CLIENT_UPDATE,
+        elif view_setup['type'] in [MC_CLIENT_UPDATE,
                                     MC_CONTRACT_UPDATE,
                                     MC_EVENT_UPDATE]:
             input_data = display_prompt(view_setup['prompt'])

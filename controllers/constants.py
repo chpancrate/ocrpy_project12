@@ -10,7 +10,7 @@ MSG_ERROR = ("une erreur s'est produite veuillez réessayer,\n"
              "si l'erreur persiste contactez votre administrateur")
 MSG_CLIENT_NOT_FOUND = 'Le client est inexistant'
 MSG_CONTRACT_NOT_FOUND = ('Le contrat est : inexistant, '
-                          'déjà lié à un évènement '
+                          'déjà lié à un évènement, '
                           'non lié à un de vos client '
                           'ou non signé')
 MSG_EVENT_NOT_FOUND = "L'évènement est inexistant"

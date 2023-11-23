@@ -123,14 +123,17 @@ from .controllers_functions import (navigation_handler,
                                     create_view_setup,
                                     MC_CLIENT_LIST,
                                     MC_CLIENT_DETAILS,
+                                    MC_CLIENT_UPDATE,
                                     MC_CLIENT_CREATE,
                                     MC_CONTRACT_LIST,
                                     MC_CONTRACT_DETAILS,
+                                    MC_CONTRACT_UPDATE,
                                     MC_CONTRACT_CREATE,
                                     MC_CONTRACT_UNPAID_FILTER,
                                     MC_CONTRACT_UNSIGNED_FILTER,
                                     MC_EVENT_LIST,
                                     MC_EVENT_DETAILS,
+                                    MC_EVENT_UPDATE,
                                     MC_EVENT_CREATE,
                                     MC_EVENT_OWNED_FILTER,
                                     MC_EVENT_UNASSIGNED_FILTER,
@@ -464,7 +467,7 @@ class MainController:
         actions = []
         prompt = {}
 
-        view_setup = create_view_setup(MC_CLIENT_DETAILS,
+        view_setup = create_view_setup(MC_CLIENT_UPDATE,
                                        connected_user.first_name,
                                        connected_user.last_name,
                                        connected_user_role,
@@ -508,6 +511,7 @@ class MainController:
             body_data['client'] = result['client']
 
             if data_id == '1':
+                # first name
                 client_dict = {}
                 client_dict['id'] = client_id
                 client_dict['first_name'] = data_value
@@ -530,6 +534,7 @@ class MainController:
                         console.print(MSG_ERROR)
 
             elif data_id == '2':
+                # last name
                 client_dict = {}
                 client_dict['id'] = client_id
                 client_dict['last_name'] = data_value
@@ -551,6 +556,7 @@ class MainController:
                         console.print(MSG_ERROR)
 
             elif data_id == '3':
+                # email
                 while not validate_email(data_value):
                     prompt['error'] = MSG_WRONG_EMAIL_FORMAT
                     prompt['label'] = PRPT_NEW_DATA
@@ -578,6 +584,7 @@ class MainController:
                         console.print(MSG_ERROR)
 
             elif data_id == '4':
+                # telephone
                 client_dict = {}
                 client_dict['id'] = client_id
                 client_dict['telephone'] = data_value
@@ -599,6 +606,7 @@ class MainController:
                         console.print(MSG_ERROR)
 
             elif data_id == '5':
+                # enterprise
                 client_dict = {}
                 client_dict['id'] = client_id
                 client_dict['entreprise'] = data_value
@@ -620,6 +628,7 @@ class MainController:
                         console.print(MSG_ERROR)
 
             elif data_id == '6':
+                # commercial contact id
                 while not validate_commercial_user(data_value):
                     prompt['error'] = MSG_WRONG_COMMERCIAL_USER
                     prompt['label'] = PRPT_NEW_DATA
@@ -760,6 +769,8 @@ class MainController:
                                        actions,
                                        prompt
                                        )
+
+        # check the type of list in case of filter
         if list_type == MC_CONTRACT_LIST:
             result = get_all_contracts()
         elif list_type == MC_CONTRACT_UNPAID_FILTER:
@@ -884,6 +895,10 @@ class MainController:
                     if result_support_contact['status'] == 'ok':
                         user = result_support_contact['user']
                         body_data['contract_event_support'] = user
+                    elif (result_support_contact['status'] == 'ko'
+                          and (result_support_contact['error']
+                               == DB_RECORD_NOT_FOUND)):
+                        body_data['contract_event_support'] = None
                     else:
                         capture_exception(result_support_contact['error'])
                         console.print(MSG_ERROR)
@@ -967,7 +982,7 @@ class MainController:
         actions = []
         prompt = {}
 
-        view_setup = create_view_setup(MC_CONTRACT_DETAILS,
+        view_setup = create_view_setup(MC_CONTRACT_UPDATE,
                                        connected_user.first_name,
                                        connected_user.last_name,
                                        connected_user_role,
@@ -977,6 +992,8 @@ class MainController:
                                        actions,
                                        prompt
                                        )
+
+        body_data['contract_title'] = TITLE_CONTRACT_DETAILS
 
         result = get_contract_by_id(contract_id)
 
@@ -1012,6 +1029,10 @@ class MainController:
                     if result_support_contact['status'] == 'ok':
                         user = result_support_contact['user']
                         body_data['contract_event_support'] = user
+                    elif (result_support_contact['status'] == 'ko'
+                          and (result_support_contact['error']
+                               == DB_RECORD_NOT_FOUND)):
+                        body_data['contract_event_support'] = None
                     else:
                         capture_exception(result_support_contact['error'])
                         console.print(MSG_ERROR)
@@ -1037,6 +1058,7 @@ class MainController:
             actions.append((MENU_EXIT_KEYS, MENU_EXIT_LABEL))
 
             if data_id == '1':
+                # client id
                 while not validate_client(data_value):
                     prompt['error'] = MSG_WRONG_CLIENT
                     prompt['label'] = PRPT_NEW_DATA
@@ -1057,12 +1079,14 @@ class MainController:
                     if result['status'] == 'ok':
                         self.control_contract_details(contract_id,
                                                       connected_user,
-                                                      connected_user_role)
+                                                      connected_user_role,
+                                                      MC_CONTRACT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
 
             elif data_id == '2':
+                # total amount
                 while not is_float(data_value):
                     prompt['error'] = MSG_WRONG_NUMBER_FORMAT
                     prompt['label'] = PRPT_NEW_DATA
@@ -1083,12 +1107,14 @@ class MainController:
                     if result['status'] == 'ok':
                         self.control_contract_details(contract_id,
                                                       connected_user,
-                                                      connected_user_role)
+                                                      connected_user_role,
+                                                      MC_CONTRACT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
 
             elif data_id == '3':
+                # unpaid amount
                 while not is_float(data_value):
                     prompt['error'] = MSG_WRONG_NUMBER_FORMAT
                     prompt['label'] = PRPT_NEW_DATA
@@ -1109,12 +1135,14 @@ class MainController:
                     if result['status'] == 'ok':
                         self.control_contract_details(contract_id,
                                                       connected_user,
-                                                      connected_user_role)
+                                                      connected_user_role,
+                                                      MC_CONTRACT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
 
             elif data_id == '4':
+                # status
                 while not (data_value in CONTRACT_STATUS):
                     prompt['error'] = MSG_WRONG_STATUS
                     prompt['label'] = PRPT_NEW_DATA
@@ -1139,7 +1167,8 @@ class MainController:
                         capture_message(message)
                         self.control_contract_details(contract_id,
                                                       connected_user,
-                                                      connected_user_role)
+                                                      connected_user_role,
+                                                      MC_CONTRACT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
@@ -1222,7 +1251,9 @@ class MainController:
             self.login()
         else:
             if input_data == YES_NO_CHOICE[1]:
-                self.control_contract_list(connected_user, connected_user_role)
+                self.control_contract_list(connected_user,
+                                           connected_user_role,
+                                           MC_CONTRACT_LIST)
             else:
                 contract_dict['active'] = True
                 result = create_contract(contract_dict)
@@ -1261,6 +1292,8 @@ class MainController:
                                        actions,
                                        prompt
                                        )
+
+        # check the type of list in case of filter
         if list_type == MC_EVENT_LIST:
             result = get_all_events()
         elif list_type == MC_EVENT_OWNED_FILTER:
@@ -1450,7 +1483,7 @@ class MainController:
         actions = []
         prompt = {}
 
-        view_setup = create_view_setup(MC_EVENT_DETAILS,
+        view_setup = create_view_setup(MC_EVENT_UPDATE,
                                        connected_user.first_name,
                                        connected_user.last_name,
                                        connected_user_role,
@@ -1460,6 +1493,8 @@ class MainController:
                                        actions,
                                        prompt
                                        )
+
+        body_data['event_title'] = TITLE_EVENT_DETAILS
 
         result = get_event_by_id(event_id)
 
@@ -1472,9 +1507,12 @@ class MainController:
             if result_support_contact['status'] == 'ok':
                 user = result_support_contact['user']
                 body_data['event_support'] = user
-            else:
-                capture_exception(result_support_contact['error'])
-                console.print(MSG_ERROR)
+
+            result_contract = get_contract_by_id(event.contract_id)
+            contract = result_contract['contract']
+
+            result_client = get_client_by_id(contract.client_id)
+            body_data['event_client'] = result_client['client']
 
             # actions menu creation, taking role into account
             actions.append((MENU_CLIENTS_LIST_KEYS, MENU_CLIENTS_LIST_LABEL))
@@ -1496,6 +1534,7 @@ class MainController:
             actions.append((MENU_EXIT_KEYS, MENU_EXIT_LABEL))
 
             if data_id == '1':
+                # title
                 event_dict = {}
                 event_dict['id'] = event_id
                 event_dict['title'] = data_value
@@ -1509,13 +1548,15 @@ class MainController:
                     result = update_event(event_dict)
                     if result['status'] == 'ok':
                         self.control_event_details(event_id,
-                                                   connected_user.id,
-                                                   connected_user_role)
+                                                   connected_user,
+                                                   connected_user_role,
+                                                   MC_EVENT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
 
             elif data_id == '2':
+                # contract if
                 while not validate_contract(data_value):
                     prompt['error'] = MSG_CONTRACT_NOT_FOUND
                     prompt['label'] = PRPT_NEW_DATA
@@ -1534,13 +1575,15 @@ class MainController:
                     result = update_event(event_dict)
                     if result['status'] == 'ok':
                         self.control_event_details(event_id,
-                                                   connected_user.id,
-                                                   connected_user_role)
+                                                   connected_user,
+                                                   connected_user_role,
+                                                   MC_EVENT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
 
             elif data_id == '3':
+                # start date
                 while not is_date(data_value):
                     prompt['error'] = MSG_WRONG_DATE_FORMAT
                     prompt['label'] = PRPT_NEW_DATA
@@ -1560,13 +1603,15 @@ class MainController:
                     result = update_event(event_dict)
                     if result['status'] == 'ok':
                         self.control_event_details(event_id,
-                                                   connected_user.id,
-                                                   connected_user_role)
+                                                   connected_user,
+                                                   connected_user_role,
+                                                   MC_EVENT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
 
             elif data_id == '4':
+                # end date
                 while not is_date(data_value):
                     prompt['error'] = MSG_WRONG_DATE_FORMAT
                     prompt['label'] = PRPT_NEW_DATA
@@ -1586,13 +1631,15 @@ class MainController:
                     result = update_event(event_dict)
                     if result['status'] == 'ok':
                         self.control_event_details(event_id,
-                                                   connected_user.id,
-                                                   connected_user_role)
+                                                   connected_user,
+                                                   connected_user_role,
+                                                   MC_EVENT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
 
             elif data_id == '5':
+                # location
                 event_dict = {}
                 event_dict['id'] = event_id
                 event_dict['location'] = data_value
@@ -1606,13 +1653,15 @@ class MainController:
                     result = update_event(event_dict)
                     if result['status'] == 'ok':
                         self.control_event_details(event_id,
-                                                   connected_user.id,
-                                                   connected_user_role)
+                                                   connected_user,
+                                                   connected_user_role,
+                                                   MC_EVENT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
 
             elif data_id == '6':
+                # attendees
                 while not is_float(data_value):
                     prompt['error'] = MSG_WRONG_NUMBER_FORMAT
                     prompt['label'] = PRPT_NEW_DATA
@@ -1631,13 +1680,15 @@ class MainController:
                     result = update_event(event_dict)
                     if result['status'] == 'ok':
                         self.control_event_details(event_id,
-                                                   connected_user.id,
-                                                   connected_user_role)
+                                                   connected_user,
+                                                   connected_user_role,
+                                                   MC_EVENT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
 
             elif data_id == '7':
+                # notes
                 event_dict = {}
                 event_dict['id'] = event_id
                 event_dict['notes'] = data_value
@@ -1651,13 +1702,15 @@ class MainController:
                     result = update_event(event_dict)
                     if result['status'] == 'ok':
                         self.control_event_details(event_id,
-                                                   connected_user.id,
-                                                   connected_user_role)
+                                                   connected_user,
+                                                   connected_user_role,
+                                                   MC_EVENT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
 
             elif data_id == '8':
+                # support contact id
                 while not validate_support_user(data_value):
                     prompt['error'] = MSG_WRONG_SUPPORT_USER
                     prompt['label'] = PRPT_NEW_DATA
@@ -1676,8 +1729,9 @@ class MainController:
                     result = update_event(event_dict)
                     if result['status'] == 'ok':
                         self.control_event_details(event_id,
-                                                   connected_user.id,
-                                                   connected_user_role)
+                                                   connected_user,
+                                                   connected_user_role,
+                                                   MC_EVENT_LIST)
                     else:
                         capture_exception(result['error'])
                         console.print(MSG_ERROR)
@@ -1788,7 +1842,9 @@ class MainController:
             self.login()
         else:
             if input_data == YES_NO_CHOICE[1]:
-                self.control_event_list(connected_user, connected_user_role)
+                self.control_event_list(connected_user,
+                                        connected_user_role,
+                                        MC_EVENT_LIST)
             else:
                 event_dict['active'] = True
                 event_dict['support_contact_id'] = None
@@ -2221,8 +2277,8 @@ class MainController:
                                                       self.no_tokens)
         while not validate_employee_number(input_data):
             prompt['error'] = MSG_WRONG_EMPLOYEE_NUMBER
-            input_data = self.screen.user_creation(view_setup,
-                                                   self.no_tokens)
+            input_data, token = self.screen.user_creation(view_setup,
+                                                          self.no_tokens)
         prompt.pop('error', None)
         user_dict['employee_number'] = input_data
         body_data['employee_number'] = input_data
@@ -2244,8 +2300,8 @@ class MainController:
                                                       self.no_tokens)
         while not validate_email(input_data):
             prompt['error'] = MSG_WRONG_EMAIL_FORMAT
-            input_data = self.screen.user_creation(view_setup,
-                                                   self.no_tokens)
+            input_data, token = self.screen.user_creation(view_setup,
+                                                          self.no_tokens)
         prompt.pop('error', None)
         user_dict['email'] = input_data
         body_data['email'] = input_data
@@ -2255,8 +2311,8 @@ class MainController:
                                                       self.no_tokens)
         while not validate_team(input_data):
             prompt['error'] = MSG_WRONG_TEAM
-            input_data = self.screen.user_creation(view_setup,
-                                                   self.no_tokens)
+            input_data, token = self.screen.user_creation(view_setup,
+                                                          self.no_tokens)
         user_dict['team_id'] = input_data
         body_data['team_id'] = input_data
 
