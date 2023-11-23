@@ -58,7 +58,7 @@ class Contract(Base):
     amount_unpaid = Column(Float, nullable=False)
     creation_date = Column(DateTime, nullable=False, default=datetime.now)
     last_update = Column(DateTime, onupdate=datetime.now)
-    status = Column(String(10))
+    status = Column(String(10), nullable=False)
     active = Column(Boolean, default=True, nullable=False)
     events = relationship('Event',
                           cascade='save-update, merge, delete',
@@ -85,7 +85,7 @@ class Event(Base):
     support_contact_id = Column(Integer, ForeignKey('users.id'))
     location = Column(String(100), nullable=False)
     attendees = Column(Integer, CheckConstraint('attendees >= 0'), default=0)
-    notes = Column(Text, nullable=False)
+    notes = Column(Text)
     creation_date = Column(DateTime, nullable=False, default=datetime.now)
     last_update = Column(DateTime, onupdate=datetime.now)
     active = Column(Boolean, default=True, nullable=False)

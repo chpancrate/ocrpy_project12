@@ -67,23 +67,17 @@ class Screen:
 
             check_access = self.auth.check_token(stored_tokens['access'])
             if check_access['status'] == 'ok':
-                # print('XXX-TokP: check_access ok')
                 token = stored_tokens['access']
             else:
-                # print('XXX-TokP: check_access ko')
                 check_refresh = self.auth.check_token(stored_tokens['refresh'])
                 if check_refresh['status'] == 'ok':
-                    # print('XXX-TokP: check_refresh ok')
                     get_refresh = self.auth.request_token_with_refresh(
                         stored_tokens['refresh'])
                     if get_refresh['status'] == 'ok':
-                        # print('XXX-TokP: get_refresh_ok')
                         token = get_refresh['access']
                     else:
-                        # print('XXX-TokP: get_refresh_ko')
                         token = stored_tokens['access']
                 else:
-                    # print('XXX-TokP: check_refresh ko')
                     token = stored_tokens['access']
 
             return result, token
