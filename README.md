@@ -91,3 +91,15 @@ In order to launch the application use the command :
 python epicevents.py
 ```
 Using the admin account you can create the other users account.
+
+## Screenshots
+
+### Lists screen example
+
+![Lists](images/event_list.png)
+
+### Details screen example
+
+![Details](images/contract_details.png)
+
+
